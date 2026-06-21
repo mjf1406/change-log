@@ -13,10 +13,23 @@ const _schema = i.schema({
       imageURL: i.string().optional(),
       type: i.string().optional(),
     }),
-    todos: i.entity({
+    sites: i.entity({
+      name: i.string(),
+      slug: i.string().unique().indexed(),
+      description: i.string().optional(),
+      liveUrl: i.string().optional(),
+      githubUrl: i.string().optional(),
+      order: i.number().indexed(),
+      createdAt: i.number().indexed(),
+    }),
+    tasks: i.entity({
       text: i.string(),
-      done: i.boolean(),
-      createdAt: i.number(),
+      description: i.string().optional(),
+      status: i.string().indexed(),
+      order: i.number().indexed(),
+      createdAt: i.number().indexed(),
+      startedAt: i.number().optional(),
+      completedAt: i.number().indexed().optional(),
     }),
   },
   links: {
@@ -33,10 +46,29 @@ const _schema = i.schema({
         label: "linkedGuestUsers",
       },
     },
-  },
-  rooms: {
-    todos: {
-      presence: i.entity({}),
+    siteTasks: {
+      forward: {
+        on: "tasks",
+        has: "one",
+        label: "site",
+      },
+      reverse: {
+        on: "sites",
+        has: "many",
+        label: "tasks",
+      },
+    },
+    siteLogo: {
+      forward: {
+        on: "sites",
+        has: "one",
+        label: "logo",
+      },
+      reverse: {
+        on: "$files",
+        has: "many",
+        label: "sites",
+      },
     },
   },
 });

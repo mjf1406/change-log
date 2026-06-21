@@ -9,36 +9,14 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SolsimRouteImport } from './routes/solsim'
-import { Route as ReciparooRouteImport } from './routes/reciparoo'
-import { Route as ImagarooRouteImport } from './routes/imagaroo'
-import { Route as DidjyahRouteImport } from './routes/didjyah'
-import { Route as ClassclarusRouteImport } from './routes/classclarus'
+import { Route as SitesRouteImport } from './routes/sites'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SiteIndexRouteImport } from './routes/$site/index'
+import { Route as SiteBoardRouteImport } from './routes/$site/board'
 
-const SolsimRoute = SolsimRouteImport.update({
-  id: '/solsim',
-  path: '/solsim',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReciparooRoute = ReciparooRouteImport.update({
-  id: '/reciparoo',
-  path: '/reciparoo',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ImagarooRoute = ImagarooRouteImport.update({
-  id: '/imagaroo',
-  path: '/imagaroo',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DidjyahRoute = DidjyahRouteImport.update({
-  id: '/didjyah',
-  path: '/didjyah',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ClassclarusRoute = ClassclarusRouteImport.update({
-  id: '/classclarus',
-  path: '/classclarus',
+const SitesRoute = SitesRouteImport.update({
+  id: '/sites',
+  path: '/sites',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -46,97 +24,58 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SiteIndexRoute = SiteIndexRouteImport.update({
+  id: '/$site/',
+  path: '/$site/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SiteBoardRoute = SiteBoardRouteImport.update({
+  id: '/$site/board',
+  path: '/$site/board',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/classclarus': typeof ClassclarusRoute
-  '/didjyah': typeof DidjyahRoute
-  '/imagaroo': typeof ImagarooRoute
-  '/reciparoo': typeof ReciparooRoute
-  '/solsim': typeof SolsimRoute
+  '/sites': typeof SitesRoute
+  '/$site/board': typeof SiteBoardRoute
+  '/$site/': typeof SiteIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/classclarus': typeof ClassclarusRoute
-  '/didjyah': typeof DidjyahRoute
-  '/imagaroo': typeof ImagarooRoute
-  '/reciparoo': typeof ReciparooRoute
-  '/solsim': typeof SolsimRoute
+  '/sites': typeof SitesRoute
+  '/$site/board': typeof SiteBoardRoute
+  '/$site': typeof SiteIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/classclarus': typeof ClassclarusRoute
-  '/didjyah': typeof DidjyahRoute
-  '/imagaroo': typeof ImagarooRoute
-  '/reciparoo': typeof ReciparooRoute
-  '/solsim': typeof SolsimRoute
+  '/sites': typeof SitesRoute
+  '/$site/board': typeof SiteBoardRoute
+  '/$site/': typeof SiteIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/classclarus'
-    | '/didjyah'
-    | '/imagaroo'
-    | '/reciparoo'
-    | '/solsim'
+  fullPaths: '/' | '/sites' | '/$site/board' | '/$site/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/classclarus' | '/didjyah' | '/imagaroo' | '/reciparoo' | '/solsim'
-  id:
-    | '__root__'
-    | '/'
-    | '/classclarus'
-    | '/didjyah'
-    | '/imagaroo'
-    | '/reciparoo'
-    | '/solsim'
+  to: '/' | '/sites' | '/$site/board' | '/$site'
+  id: '__root__' | '/' | '/sites' | '/$site/board' | '/$site/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  ClassclarusRoute: typeof ClassclarusRoute
-  DidjyahRoute: typeof DidjyahRoute
-  ImagarooRoute: typeof ImagarooRoute
-  ReciparooRoute: typeof ReciparooRoute
-  SolsimRoute: typeof SolsimRoute
+  SitesRoute: typeof SitesRoute
+  SiteBoardRoute: typeof SiteBoardRoute
+  SiteIndexRoute: typeof SiteIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/solsim': {
-      id: '/solsim'
-      path: '/solsim'
-      fullPath: '/solsim'
-      preLoaderRoute: typeof SolsimRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reciparoo': {
-      id: '/reciparoo'
-      path: '/reciparoo'
-      fullPath: '/reciparoo'
-      preLoaderRoute: typeof ReciparooRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/imagaroo': {
-      id: '/imagaroo'
-      path: '/imagaroo'
-      fullPath: '/imagaroo'
-      preLoaderRoute: typeof ImagarooRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/didjyah': {
-      id: '/didjyah'
-      path: '/didjyah'
-      fullPath: '/didjyah'
-      preLoaderRoute: typeof DidjyahRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/classclarus': {
-      id: '/classclarus'
-      path: '/classclarus'
-      fullPath: '/classclarus'
-      preLoaderRoute: typeof ClassclarusRouteImport
+    '/sites': {
+      id: '/sites'
+      path: '/sites'
+      fullPath: '/sites'
+      preLoaderRoute: typeof SitesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -146,16 +85,28 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$site/': {
+      id: '/$site/'
+      path: '/$site'
+      fullPath: '/$site/'
+      preLoaderRoute: typeof SiteIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$site/board': {
+      id: '/$site/board'
+      path: '/$site/board'
+      fullPath: '/$site/board'
+      preLoaderRoute: typeof SiteBoardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  ClassclarusRoute: ClassclarusRoute,
-  DidjyahRoute: DidjyahRoute,
-  ImagarooRoute: ImagarooRoute,
-  ReciparooRoute: ReciparooRoute,
-  SolsimRoute: SolsimRoute,
+  SitesRoute: SitesRoute,
+  SiteBoardRoute: SiteBoardRoute,
+  SiteIndexRoute: SiteIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -12,10 +12,27 @@ const rules = {
       update: "auth.id == data.id",
     },
   },
-  todos: {
+  $files: {
     bind: { isAllowedUser: `auth.email == '${ALLOWED_EMAIL}'` },
     allow: {
-      view: "isAllowedUser",
+      view: "true",
+      create: "isAllowedUser && data.path.startsWith('sites/')",
+      delete: "isAllowedUser",
+    },
+  },
+  sites: {
+    bind: { isAllowedUser: `auth.email == '${ALLOWED_EMAIL}'` },
+    allow: {
+      view: "true",
+      create: "isAllowedUser",
+      update: "isAllowedUser",
+      delete: "isAllowedUser",
+    },
+  },
+  tasks: {
+    bind: { isAllowedUser: `auth.email == '${ALLOWED_EMAIL}'` },
+    allow: {
+      view: "true",
       create: "isAllowedUser",
       update: "isAllowedUser",
       delete: "isAllowedUser",

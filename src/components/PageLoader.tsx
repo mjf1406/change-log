@@ -1,9 +1,17 @@
 import { Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-export function PageLoader() {
+type PageLoaderProps = {
+  className?: string;
+};
+
+export function PageLoader({ className }: PageLoaderProps) {
   return (
     <div
-      className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center"
+      className={cn(
+        "flex min-h-[calc(100vh-3.5rem)] items-center justify-center",
+        className,
+      )}
       role="status"
       aria-label="Loading page"
     >

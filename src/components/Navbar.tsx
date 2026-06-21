@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { Menu } from "lucide-react";
+import { LogIn, LogOut, Menu, Plus, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -9,9 +9,11 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { SignInDialog } from "@/components/SignInDialog";
+import { SiteFormDialog } from "@/components/SiteFormDialog";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { APPS } from "@/lib/apps";
+import { useIsAdmin } from "@/lib/admin";
 import { db } from "@/lib/db";
+import { useSites } from "@/lib/sites";
 import { cn } from "@/lib/utils";
 
 const navLinkClass =
@@ -21,12 +23,14 @@ const navLinkActiveClass = "bg-muted text-foreground";
 
 function NavLink({
   to,
+  params,
   children,
   exact = false,
   onNavigate,
   className,
 }: {
   to: string;
+  params?: Record<string, string>;
   children: ReactNode;
   exact?: boolean;
   onNavigate?: () => void;
@@ -35,6 +39,7 @@ function NavLink({
   return (
     <Link
       to={to}
+      params={params}
       activeOptions={{ exact }}
       onClick={onNavigate}
       className={cn(navLinkClass, className)}
@@ -47,29 +52,60 @@ function NavLink({
   );
 }
 
+function SiteNavLinks({
+  onNavigate,
+  className,
+}: {
+  onNavigate?: () => void;
+  className?: string;
+}) {
+  const { isLoading, sites } = useSites();
+
+  if (isLoading) {
+    return (
+      <span className="px-3 py-2 text-xs text-muted-foreground">Loading...</span>
+    );
+  }
+
+  return (
+    <>
+      {sites.map((site) => (
+        <NavLink
+          key={site.id}
+          to="/$site"
+          params={{ site: site.slug }}
+          onNavigate={onNavigate}
+          className={className}
+        >
+          {site.name}
+        </NavLink>
+      ))}
+    </>
+  );
+}
+
 function DesktopNav() {
   return (
     <nav className="hidden items-center gap-1 md:flex" aria-label="Main">
       <NavLink to="/" exact>
         Home
       </NavLink>
-      {APPS.map((app) => (
-        <NavLink key={app.slug} to={`/${app.slug}`}>
-          {app.name}
-        </NavLink>
-      ))}
+      <SiteNavLinks />
     </nav>
   );
 }
 
 function AuthActions({
   onSignIn,
+  onCreateSite,
   className,
 }: {
   onSignIn: () => void;
+  onCreateSite: () => void;
   className?: string;
 }) {
   const { isLoading, user } = db.useAuth();
+  const { isAdmin } = useIsAdmin();
 
   if (isLoading) {
     return null;
@@ -77,19 +113,49 @@ function AuthActions({
 
   if (!user) {
     return (
-      <Button variant="outline" size="sm" className={className} onClick={onSignIn}>
-        Sign in
+      <Button
+        variant="default"
+        size="icon-sm"
+        className={className}
+        onClick={onSignIn}
+        aria-label="Sign in"
+      >
+        <LogIn />
       </Button>
     );
   }
 
   return (
-    <div className={cn("flex items-center gap-3", className)}>
-      <p className="max-w-48 truncate text-xs text-muted-foreground">
-        {user.email}
-      </p>
-      <Button variant="outline" size="sm" onClick={() => db.auth.signOut()}>
-        Sign out
+    <div className={cn("flex items-center gap-2", className)}>
+      {isAdmin ? (
+        <>
+          <Button
+            variant="outline"
+            size="icon-sm"
+            asChild
+            aria-label="Manage sites"
+          >
+            <Link to="/sites">
+              <Settings2 />
+            </Link>
+          </Button>
+          <Button
+            variant="default"
+            size="icon-sm"
+            onClick={onCreateSite}
+            aria-label="Add site"
+          >
+            <Plus />
+          </Button>
+        </>
+      ) : null}
+      <Button
+        variant="outline"
+        size="icon-sm"
+        onClick={() => db.auth.signOut()}
+        aria-label="Sign out"
+      >
+        <LogOut />
       </Button>
     </div>
   );
@@ -99,13 +165,16 @@ function MobileNav({
   open,
   onOpenChange,
   onSignIn,
+  onCreateSite,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSignIn: () => void;
+  onCreateSite: () => void;
 }) {
   const close = () => onOpenChange(false);
   const { isLoading, user } = db.useAuth();
+  const { isAdmin } = useIsAdmin();
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -124,46 +193,62 @@ function MobileNav({
           <NavLink to="/" exact onNavigate={close} className="w-full">
             Home
           </NavLink>
-          {APPS.map((app) => (
-            <NavLink
-              key={app.slug}
-              to={`/${app.slug}`}
-              onNavigate={close}
-              className="w-full"
-            >
-              {app.name}
-            </NavLink>
-          ))}
+          <SiteNavLinks onNavigate={close} className="w-full" />
         </nav>
         <SheetFooter className="border-t border-border">
           {!isLoading && !user ? (
             <Button
-              variant="outline"
-              className="w-full"
+              variant="default"
+              size="icon-sm"
+              className="mx-auto"
               onClick={() => {
                 close();
                 onSignIn();
               }}
+              aria-label="Sign in"
             >
-              Sign in
+              <LogIn />
             </Button>
           ) : null}
           {!isLoading && user ? (
-            <>
-              <p className="truncate text-xs text-muted-foreground">
-                {user.email}
-              </p>
+            <div className="flex items-center justify-center gap-2">
+              {isAdmin ? (
+                <>
+                  <Button
+                    variant="outline"
+                    size="icon-sm"
+                    asChild
+                    aria-label="Manage sites"
+                  >
+                    <Link to="/sites" onClick={close}>
+                      <Settings2 />
+                    </Link>
+                  </Button>
+                  <Button
+                    variant="default"
+                    size="icon-sm"
+                    onClick={() => {
+                      close();
+                      onCreateSite();
+                    }}
+                    aria-label="Add site"
+                  >
+                    <Plus />
+                  </Button>
+                </>
+              ) : null}
               <Button
                 variant="outline"
-                className="w-full"
+                size="icon-sm"
                 onClick={() => {
                   close();
                   void db.auth.signOut();
                 }}
+                aria-label="Sign out"
               >
-                Sign out
+                <LogOut />
               </Button>
-            </>
+            </div>
           ) : null}
         </SheetFooter>
       </SheetContent>
@@ -174,6 +259,7 @@ function MobileNav({
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [signInOpen, setSignInOpen] = useState(false);
+  const [createSiteOpen, setCreateSiteOpen] = useState(false);
 
   return (
     <>
@@ -185,6 +271,7 @@ export function Navbar() {
             <div className="flex items-center gap-2">
               <AuthActions
                 onSignIn={() => setSignInOpen(true)}
+                onCreateSite={() => setCreateSiteOpen(true)}
                 className="hidden md:flex"
               />
               <ThemeToggle />
@@ -192,6 +279,7 @@ export function Navbar() {
                 open={mobileOpen}
                 onOpenChange={setMobileOpen}
                 onSignIn={() => setSignInOpen(true)}
+                onCreateSite={() => setCreateSiteOpen(true)}
               />
             </div>
           </div>
@@ -199,6 +287,11 @@ export function Navbar() {
       </header>
 
       <SignInDialog open={signInOpen} onOpenChange={setSignInOpen} />
+      <SiteFormDialog
+        open={createSiteOpen}
+        onOpenChange={setCreateSiteOpen}
+        mode="create"
+      />
     </>
   );
 }

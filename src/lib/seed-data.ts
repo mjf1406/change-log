@@ -1,33 +1,32 @@
-export const APPS = [
+export const SEED_SITES = [
   {
-    slug: "classclarus",
     name: "ClassClarus",
+    slug: "classclarus",
     description: "Classroom clarity and organization.",
   },
   {
-    slug: "didjyah",
     name: "DidjYah",
+    slug: "didjyah",
     description: "Track what you did and when.",
   },
   {
-    slug: "imagaroo",
     name: "Imagaroo",
+    slug: "imagaroo",
     description: "Image creation and editing.",
   },
   {
-    slug: "reciparoo",
     name: "Reciparoo",
+    slug: "reciparoo",
     description: "Recipe discovery and management.",
   },
   {
-    slug: "solsim",
     name: "SolSim",
+    slug: "solsim",
     description: "Solar simulation and modeling tools.",
   },
+  {
+    name: "TEST",
+    slug: "test",
+    description: "Demo site for testing feeds and boards.",
+  },
 ] as const;
-
-export type AppSlug = (typeof APPS)[number]["slug"];
-
-export function getAppBySlug(slug: string) {
-  return APPS.find((app) => app.slug === slug);
-}
