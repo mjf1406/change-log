@@ -1,9 +1,15 @@
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
-import { KanbanBoard } from "@/components/KanbanBoard";
+import { ArrowLeft, Plus } from "lucide-react";
+import {
+  getTodoColumnLength,
+  KanbanBoard,
+} from "@/components/KanbanBoard";
 import { PageLoader } from "@/components/PageLoader";
 import { SiteNotFound } from "@/components/SiteNotFound";
+import { TaskFormDialog } from "@/components/TaskFormDialog";
 import { Button } from "@/components/ui/button";
+import { useIsAdmin } from "@/lib/admin";
 import { useSiteBySlug } from "@/lib/sites";
 
 export const Route = createFileRoute("/$site/board")({
@@ -12,9 +18,11 @@ export const Route = createFileRoute("/$site/board")({
 
 function SiteBoardPage() {
   const { site: siteSlug } = Route.useParams();
+  const { isLoading: authLoading, isAdmin } = useIsAdmin();
   const { isLoading, site } = useSiteBySlug(siteSlug);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
-  if (isLoading) {
+  if (isLoading || authLoading) {
     return <PageLoader />;
   }
 
@@ -33,15 +41,33 @@ function SiteBoardPage() {
             Todo, doing, and done for this site.
           </p>
         </div>
-        <Button variant="outline" asChild>
-          <Link to="/$site" params={{ site: site.slug }}>
-            <ArrowLeft data-icon="inline-start" />
-            Back to feed
-          </Link>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          {isAdmin ? (
+            <Button onClick={() => setCreateDialogOpen(true)}>
+              <Plus data-icon="inline-start" />
+              Add task
+            </Button>
+          ) : null}
+          <Button variant="outline" asChild>
+            <Link to="/$site" params={{ site: site.slug }}>
+              <ArrowLeft data-icon="inline-start" />
+              Back to feed
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <KanbanBoard site={site} />
+
+      {isAdmin ? (
+        <TaskFormDialog
+          open={createDialogOpen}
+          onOpenChange={setCreateDialogOpen}
+          mode="create"
+          siteId={site.id}
+          nextOrder={getTodoColumnLength(site)}
+        />
+      ) : null}
     </main>
   );
 }

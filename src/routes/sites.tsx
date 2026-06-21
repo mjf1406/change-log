@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
+import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
 import { PageLoader } from "@/components/PageLoader";
 import { SiteFormDialog } from "@/components/SiteFormDialog";
 import { SortableSiteList } from "@/components/SortableSiteList";
@@ -25,6 +26,7 @@ function SitesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
   const [editingSite, setEditingSite] = useState<SiteWithLogo | undefined>();
+  const [siteToDelete, setSiteToDelete] = useState<SiteWithLogo | null>(null);
 
   if (isLoading || authLoading) {
     return <PageLoader />;
@@ -42,13 +44,10 @@ function SitesPage() {
     setDialogOpen(true);
   };
 
-  const handleDeleteSite = async (site: SiteWithLogo) => {
-    const confirmed = window.confirm(
-      `Delete "${site.name}"? This will remove the site entry. Linked tasks may need cleanup.`,
-    );
-    if (!confirmed) return;
-
-    await db.transact(db.tx.sites[site.id].delete());
+  const handleDeleteSite = async () => {
+    if (!siteToDelete) return;
+    await db.transact(db.tx.sites[siteToDelete.id].delete());
+    setSiteToDelete(null);
   };
 
   return (
@@ -95,7 +94,7 @@ function SitesPage() {
           sites={sites}
           isAdmin={isAdmin}
           onEdit={openEditDialog}
-          onDelete={(site) => void handleDeleteSite(site)}
+          onDelete={setSiteToDelete}
         />
       )}
 
@@ -104,6 +103,20 @@ function SitesPage() {
         onOpenChange={setDialogOpen}
         mode={dialogMode}
         site={editingSite}
+      />
+
+      <DeleteConfirmDialog
+        open={siteToDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) setSiteToDelete(null);
+        }}
+        title="Delete site?"
+        description={
+          siteToDelete
+            ? `Delete "${siteToDelete.name}"? This will remove the site entry. Linked tasks may need cleanup.`
+            : ""
+        }
+        onConfirm={handleDeleteSite}
       />
     </main>
   );

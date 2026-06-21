@@ -7,7 +7,6 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
-  type DragOverEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
 import {
@@ -16,7 +15,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { SiteListItem } from "@/components/SiteListItem";
-import { db } from "@/lib/db";
+import { buildSiteOrderTxs } from "@/lib/sites";
 import type { SiteWithLogo } from "@/lib/sites";
 
 type SortableSiteListProps = {
@@ -33,14 +32,8 @@ export function SortableSiteList({
   onDelete,
 }: SortableSiteListProps) {
   const [activeSite, setActiveSite] = useState<SiteWithLogo | null>(null);
-  const [orderedSites, setOrderedSites] = useState<SiteWithLogo[] | null>(null);
 
-  const displaySites = orderedSites ?? sites;
-
-  const siteIds = useMemo(
-    () => displaySites.map((site) => site.id),
-    [displaySites],
-  );
+  const siteIds = useMemo(() => sites.map((site) => site.id), [sites]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -54,41 +47,25 @@ export function SortableSiteList({
     if (site) setActiveSite(site);
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     setActiveSite(null);
 
     if (!isAdmin) return;
 
     const { active, over } = event;
-    setOrderedSites(null);
-
     if (!over || active.id === over.id) return;
 
-    const oldIndex = displaySites.findIndex((site) => site.id === active.id);
-    const newIndex = displaySites.findIndex((site) => site.id === over.id);
+    const oldIndex = sites.findIndex((site) => site.id === active.id);
+    const newIndex = sites.findIndex((site) => site.id === over.id);
     if (oldIndex === -1 || newIndex === -1) return;
 
-    const nextSites = arrayMove(displaySites, oldIndex, newIndex);
-    const txs = nextSites.map((site, index) =>
-      db.tx.sites[site.id].update({ order: index }),
-    );
+    const nextSites = arrayMove(sites, oldIndex, newIndex);
 
-    void db.transact(txs);
-  };
-
-  const handleDragOver = (event: DragOverEvent) => {
-    if (!isAdmin) return;
-
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-
-    setOrderedSites((current) => {
-      const base = current ?? sites;
-      const oldIndex = base.findIndex((site) => site.id === active.id);
-      const newIndex = base.findIndex((site) => site.id === over.id);
-      if (oldIndex === -1 || newIndex === -1) return base;
-      return arrayMove(base, oldIndex, newIndex);
-    });
+    try {
+      await buildSiteOrderTxs(nextSites);
+    } catch (error) {
+      console.error("Failed to reorder sites:", error);
+    }
   };
 
   return (
@@ -96,12 +73,11 @@ export function SortableSiteList({
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragStart={handleDragStart}
-      onDragOver={handleDragOver}
-      onDragEnd={handleDragEnd}
+      onDragEnd={(event) => void handleDragEnd(event)}
     >
       <SortableContext items={siteIds} strategy={verticalListSortingStrategy}>
         <ul className="space-y-2">
-          {displaySites.map((site) => (
+          {sites.map((site) => (
             <SiteListItem
               key={site.id}
               site={site}

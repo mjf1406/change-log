@@ -10,6 +10,13 @@ export type Task = InstaQLEntity<AppSchema, "tasks", { site: {} }>;
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export type SiteWithTasks = InstaQLEntity<AppSchema, "sites", { tasks: {}; logo: {} }>;
 
+export async function buildSiteOrderTxs(ordered: SiteWithLogo[]) {
+  const txs = ordered.map((site, index) =>
+    db.tx.sites[site.id].update({ order: index }),
+  );
+  await db.transact(txs);
+}
+
 export function useSites() {
   const { isLoading, error, data } = db.useQuery({
     sites: {

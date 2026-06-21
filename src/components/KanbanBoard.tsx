@@ -16,25 +16,25 @@ import {
   arrayMove,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { id } from "@instantdb/react";
-import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
 import { PageLoader } from "@/components/PageLoader";
+import { TaskCard } from "@/components/TaskCard";
+import { TaskDetailDialog } from "@/components/TaskDetailDialog";
+import { TaskFormDialog } from "@/components/TaskFormDialog";
 import { useIsAdmin } from "@/lib/admin";
 import { db } from "@/lib/db";
 import type { SiteWithTasks, Task } from "@/lib/sites";
 import {
   TASK_STATUSES,
   TASK_STATUS_LABELS,
+  buildColumnPersistTxs,
+  type ColumnTasks,
   type TaskStatus,
 } from "@/lib/tasks";
-import { TaskCard } from "@/components/TaskCard";
 
 type KanbanBoardProps = {
   site: SiteWithTasks;
 };
-
-type ColumnTasks = Record<TaskStatus, Task[]>;
 
 function groupTasksByStatus(tasks: Task[]): ColumnTasks {
   const grouped: ColumnTasks = {
@@ -79,53 +79,26 @@ function findTaskContainer(
   return null;
 }
 
-function getStatusUpdates(
-  fromStatus: TaskStatus,
-  toStatus: TaskStatus,
-  now: number,
-): Partial<{
-  status: TaskStatus;
-  startedAt: number | null;
-  completedAt: number | null;
-}> {
-  if (fromStatus === toStatus) {
-    return { status: toStatus };
-  }
-
-  const updates: Partial<{
-    status: TaskStatus;
-    startedAt: number | null;
-    completedAt: number | null;
-  }> = { status: toStatus };
-
-  if (toStatus === "doing" && fromStatus === "todo") {
-    updates.startedAt = now;
-  }
-
-  if (toStatus === "done") {
-    updates.completedAt = now;
-  }
-
-  if (fromStatus === "done" && toStatus !== "done") {
-    updates.completedAt = null;
-  }
-
-  if (fromStatus === "doing" && toStatus === "todo") {
-    updates.startedAt = null;
-  }
-
-  return updates;
+function resolveOverContainer(
+  overId: string,
+  columns: ColumnTasks,
+): TaskStatus | null {
+  return parseContainerId(overId) ?? findTaskContainer(overId, columns);
 }
 
 function KanbanColumn({
   status,
   tasks,
   isAdmin,
+  onEditTask,
+  onViewDescription,
   onDeleteTask,
 }: {
   status: TaskStatus;
   tasks: Task[];
   isAdmin: boolean;
+  onEditTask: (task: Task) => void;
+  onViewDescription: (task: Task) => void;
   onDeleteTask: (taskId: string) => void;
 }) {
   const { setNodeRef } = useDroppable({ id: getContainerId(status) });
@@ -153,6 +126,12 @@ function KanbanColumn({
               key={task.id}
               task={task}
               isAdmin={isAdmin}
+              onEdit={() => onEditTask(task)}
+              onViewDescription={
+                task.description
+                  ? () => onViewDescription(task)
+                  : undefined
+              }
               onDelete={() => onDeleteTask(task.id)}
             />
           ))}
@@ -166,8 +145,10 @@ export function KanbanBoard({ site }: KanbanBoardProps) {
   const { isLoading: authLoading, isAdmin } = useIsAdmin();
   const [columns, setColumns] = useState<ColumnTasks | null>(null);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
-  const [newTaskText, setNewTaskText] = useState("");
-  const [isAdding, setIsAdding] = useState(false);
+  const [originStatus, setOriginStatus] = useState<TaskStatus | null>(null);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [viewingTask, setViewingTask] = useState<Task | null>(null);
+  const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
 
   const grouped = useMemo(
     () => groupTasksByStatus((site.tasks ?? []) as Task[]),
@@ -188,8 +169,13 @@ export function KanbanBoard({ site }: KanbanBoardProps) {
 
   const handleDragStart = (event: DragStartEvent) => {
     if (!isAdmin) return;
-    const task = [...site.tasks].find((item) => item.id === event.active.id);
-    if (task) setActiveTask(task as Task);
+
+    const activeId = String(event.active.id);
+    const task = (site.tasks as Task[]).find((item) => item.id === activeId);
+    if (!task) return;
+
+    setActiveTask(task);
+    setOriginStatus(findTaskContainer(activeId, grouped));
   };
 
   const handleDragOver = (event: DragOverEvent) => {
@@ -206,9 +192,26 @@ export function KanbanBoard({ site }: KanbanBoardProps) {
       const activeContainer = findTaskContainer(activeId, base);
       if (!activeContainer) return base;
 
-      const overContainer =
-        parseContainerId(overId) ?? findTaskContainer(overId, base);
-      if (!overContainer || activeContainer === overContainer) return base;
+      const overContainer = resolveOverContainer(overId, base);
+      if (!overContainer) return base;
+
+      if (activeContainer === overContainer) {
+        const items = [...base[activeContainer]];
+        const activeIndex = items.findIndex((task) => task.id === activeId);
+        const overIndex = items.findIndex((task) => task.id === overId);
+        if (
+          activeIndex === -1 ||
+          overIndex === -1 ||
+          activeIndex === overIndex
+        ) {
+          return base;
+        }
+
+        return {
+          ...base,
+          [activeContainer]: arrayMove(items, activeIndex, overIndex),
+        };
+      }
 
       const activeItems = [...base[activeContainer]];
       const overItems = [...base[overContainer]];
@@ -234,144 +237,174 @@ export function KanbanBoard({ site }: KanbanBoardProps) {
   const handleDragEnd = (event: DragEndEvent) => {
     setActiveTask(null);
 
-    if (!isAdmin) return;
+    if (!isAdmin) {
+      setOriginStatus(null);
+      setColumns(null);
+      return;
+    }
 
     const { active, over } = event;
-    const finalColumns = columns ?? grouped;
-    setColumns(null);
+    const fromStatus = originStatus;
+    setOriginStatus(null);
 
-    if (!over) return;
+    if (!over || !fromStatus) {
+      setColumns(null);
+      return;
+    }
 
     const activeId = String(active.id);
     const overId = String(over.id);
-    const activeContainer = findTaskContainer(activeId, finalColumns);
-    if (!activeContainer) return;
 
-    const overContainer =
-      parseContainerId(overId) ?? findTaskContainer(overId, finalColumns);
-    if (!overContainer) return;
+    let finalColumns = columns ?? grouped;
 
-    const now = Date.now();
-    const columnTasks = [...finalColumns[activeContainer]];
-    const activeIndex = columnTasks.findIndex((task) => task.id === activeId);
-    if (activeIndex === -1) return;
+    if (!columns) {
+      const activeContainer = findTaskContainer(activeId, grouped);
+      if (!activeContainer) {
+        setColumns(null);
+        return;
+      }
 
-    let nextTasks = finalColumns[overContainer];
-    let nextIndex = nextTasks.findIndex((task) => task.id === overId);
+      const overContainer = resolveOverContainer(overId, grouped);
+      if (!overContainer) {
+        setColumns(null);
+        return;
+      }
 
-    if (activeContainer === overContainer) {
-      if (activeIndex === nextIndex) return;
-      nextTasks = arrayMove(columnTasks, activeIndex, nextIndex);
-    } else {
-      const [movedTask] = columnTasks.splice(activeIndex, 1);
-      nextTasks = [...finalColumns[overContainer]];
-      if (nextIndex === -1) nextIndex = nextTasks.length;
-      nextTasks.splice(nextIndex, 0, movedTask);
+      finalColumns = {
+        todo: [...grouped.todo],
+        doing: [...grouped.doing],
+        done: [...grouped.done],
+      };
+
+      if (activeContainer === overContainer) {
+        const items = [...finalColumns[activeContainer]];
+        const activeIndex = items.findIndex((task) => task.id === activeId);
+        const overIndex = items.findIndex((task) => task.id === overId);
+        if (activeIndex === -1 || overIndex === -1 || activeIndex === overIndex) {
+          setColumns(null);
+          return;
+        }
+        finalColumns[activeContainer] = arrayMove(items, activeIndex, overIndex);
+      } else {
+        const sourceItems = [...finalColumns[activeContainer]];
+        const destItems = [...finalColumns[overContainer]];
+        const activeIndex = sourceItems.findIndex((task) => task.id === activeId);
+        if (activeIndex === -1) {
+          setColumns(null);
+          return;
+        }
+
+        const [movedTask] = sourceItems.splice(activeIndex, 1);
+        const overIndex = destItems.findIndex((task) => task.id === overId);
+        const insertIndex = overIndex >= 0 ? overIndex : destItems.length;
+        destItems.splice(insertIndex, 0, movedTask);
+        finalColumns[activeContainer] = sourceItems;
+        finalColumns[overContainer] = destItems;
+      }
     }
 
-    const txs = nextTasks.map((task, index) => {
-      const fromStatus = (task.id === activeId
-        ? activeContainer
-        : (task.status as TaskStatus)) as TaskStatus;
-      const toStatus =
-        task.id === activeId ? overContainer : (task.status as TaskStatus);
-      const updates = getStatusUpdates(fromStatus, toStatus, now);
+    const toStatus = findTaskContainer(activeId, finalColumns);
+    if (!toStatus) {
+      setColumns(null);
+      return;
+    }
 
-      return db.tx.tasks[task.id].update({
-        ...updates,
-        order: index,
-      });
-    });
+    const txs = buildColumnPersistTxs(
+      finalColumns,
+      activeId,
+      fromStatus,
+      toStatus,
+      Date.now(),
+    );
+
+    setColumns(null);
 
     if (txs.length > 0) {
       void db.transact(txs);
     }
   };
 
-  const handleAddTask = async () => {
-    const text = newTaskText.trim();
-    if (!text || !isAdmin) return;
-
-    setIsAdding(true);
-    const taskId = id();
-    const nextOrder = displayColumns.todo.length;
-
-    try {
-      await db.transact(
-        db.tx.tasks[taskId]
-          .update({
-            text,
-            status: "todo",
-            order: nextOrder,
-            createdAt: Date.now(),
-          })
-          .link({ site: site.id }),
-      );
-      setNewTaskText("");
-    } finally {
-      setIsAdding(false);
-    }
-  };
-
-  const handleDeleteTask = (taskId: string) => {
-    if (!isAdmin) return;
-    void db.transact(db.tx.tasks[taskId].delete());
+  const handleDeleteTask = async () => {
+    if (!taskToDelete || !isAdmin) return;
+    await db.transact(db.tx.tasks[taskToDelete.id].delete());
+    setTaskToDelete(null);
   };
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCorners}
-      onDragStart={handleDragStart}
-      onDragOver={handleDragOver}
-      onDragEnd={handleDragEnd}
-    >
-      <div className="grid gap-4 lg:grid-cols-3">
-        {TASK_STATUSES.map((status) => (
-          <KanbanColumn
-            key={status}
-            status={status}
-            tasks={displayColumns[status]}
-            isAdmin={isAdmin}
-            onDeleteTask={handleDeleteTask}
-          />
-        ))}
-      </div>
-
-      {isAdmin ? (
-        <div className="mt-6 flex flex-col gap-3 rounded-xl border border-dashed border-border p-4 sm:flex-row">
-          <input
-            type="text"
-            value={newTaskText}
-            onChange={(event) => setNewTaskText(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                event.preventDefault();
-                void handleAddTask();
-              }
-            }}
-            placeholder="Add a new task..."
-            className="h-10 flex-1 rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-          />
-          <Button
-            onClick={() => void handleAddTask()}
-            disabled={!newTaskText.trim() || isAdding}
-          >
-            <Plus data-icon="inline-start" />
-            Add task
-          </Button>
+    <>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCorners}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="grid gap-4 lg:grid-cols-3">
+          {TASK_STATUSES.map((status) => (
+            <KanbanColumn
+              key={status}
+              status={status}
+              tasks={displayColumns[status]}
+              isAdmin={isAdmin}
+              onEditTask={setEditingTask}
+              onViewDescription={setViewingTask}
+              onDeleteTask={(taskId) => {
+                const task = (site.tasks as Task[]).find(
+                  (item) => item.id === taskId,
+                );
+                if (task) setTaskToDelete(task);
+              }}
+            />
+          ))}
         </div>
-      ) : (
-        <p className="mt-4 text-center text-sm text-muted-foreground">
-          Sign in to manage tasks on this board.
-        </p>
-      )}
 
-      <DragOverlay>
-        {activeTask ? (
-          <TaskCard task={activeTask} isAdmin={isAdmin} isOverlay />
+        {!isAdmin ? (
+          <p className="mt-4 text-center text-sm text-muted-foreground">
+            Sign in to manage tasks on this board.
+          </p>
         ) : null}
-      </DragOverlay>
-    </DndContext>
+
+        <DragOverlay>
+          {activeTask ? (
+            <TaskCard task={activeTask} isAdmin={isAdmin} isOverlay />
+          ) : null}
+        </DragOverlay>
+      </DndContext>
+
+      <TaskFormDialog
+        open={editingTask !== null}
+        onOpenChange={(open) => {
+          if (!open) setEditingTask(null);
+        }}
+        mode="edit"
+        task={editingTask ?? undefined}
+      />
+
+      <TaskDetailDialog
+        open={viewingTask !== null}
+        onOpenChange={(open) => {
+          if (!open) setViewingTask(null);
+        }}
+        task={viewingTask}
+      />
+
+      <DeleteConfirmDialog
+        open={taskToDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) setTaskToDelete(null);
+        }}
+        title="Delete task?"
+        description={
+          taskToDelete
+            ? `Delete "${taskToDelete.text}"? This cannot be undone.`
+            : ""
+        }
+        onConfirm={handleDeleteTask}
+      />
+    </>
   );
+}
+
+export function getTodoColumnLength(site: SiteWithTasks) {
+  return (site.tasks ?? []).filter((task) => task.status === "todo").length;
 }
