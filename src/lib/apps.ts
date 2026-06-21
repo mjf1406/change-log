@@ -1,18 +1,13 @@
 export const APPS = [
   {
-    slug: "solsim",
-    name: "Solsim",
-    description: "Solar simulation and modeling tools.",
-  },
-  {
     slug: "classclarus",
     name: "ClassClarus",
     description: "Classroom clarity and organization.",
   },
   {
-    slug: "reciparoo",
-    name: "Reciparoo",
-    description: "Recipe discovery and management.",
+    slug: "didjyah",
+    name: "DidjYah",
+    description: "Track what you did and when.",
   },
   {
     slug: "imagaroo",
@@ -20,9 +15,14 @@ export const APPS = [
     description: "Image creation and editing.",
   },
   {
-    slug: "didjyah",
-    name: "Didjyah",
-    description: "Track what you did and when.",
+    slug: "reciparoo",
+    name: "Reciparoo",
+    description: "Recipe discovery and management.",
+  },
+  {
+    slug: "solsim",
+    name: "SolSim",
+    description: "Solar simulation and modeling tools.",
   },
 ] as const;
 
