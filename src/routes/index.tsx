@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { DailyFeed } from "@/components/DailyFeed";
+import { CompletionHeatmap } from "@/components/CompletionHeatmap";
 import { PageLoader } from "@/components/PageLoader";
 import { SiteAvatar } from "@/components/SiteAvatar";
 import {
@@ -75,12 +76,16 @@ function HubPage() {
         )}
       </section>
 
-      <DailyFeed
-        title="All completed"
-        description="Completed tasks across every site, grouped by day."
-        showSiteBadge
-        emptyMessage="No completed tasks yet across any site."
-      />
+      <div className="space-y-10">
+        <DailyFeed
+          title="All completed"
+          description="Completed tasks across every site, grouped by day."
+          showSiteBadge
+          emptyMessage="No completed tasks yet across any site."
+        />
+
+        <CompletionHeatmap />
+      </div>
     </main>
   );
 }

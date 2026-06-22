@@ -18,10 +18,10 @@ import { useDoneTasks } from "@/lib/sites";
 import { cn } from "@/lib/utils";
 
 type CompletionHeatmapProps = {
-  siteSlug: string;
+  siteSlug?: string;
 };
 
-export function CompletionHeatmap({ siteSlug }: CompletionHeatmapProps) {
+export function CompletionHeatmap({ siteSlug }: CompletionHeatmapProps = {}) {
   const { isLoading, error, tasks } = useDoneTasks(siteSlug);
 
   if (isLoading) {
@@ -38,6 +38,9 @@ export function CompletionHeatmap({ siteSlug }: CompletionHeatmapProps) {
   const max = getHeatmapMax(counts);
   const weeks = buildHeatmapWeeks(counts);
   const hasActivity = max > 0;
+  const emptyMessage = siteSlug
+    ? "No completed tasks yet for this site."
+    : "No completed tasks yet across any site.";
 
   return (
     <section className="space-y-4">
@@ -60,7 +63,7 @@ export function CompletionHeatmap({ siteSlug }: CompletionHeatmapProps) {
         <CardContent>
           {!hasActivity ? (
             <p className="py-6 text-center text-sm text-muted-foreground">
-              No completed tasks yet for this site.
+              {emptyMessage}
             </p>
           ) : (
             <div className="space-y-3">
