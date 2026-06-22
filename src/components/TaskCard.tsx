@@ -53,7 +53,7 @@ export function TaskCard({
         {isAdmin ? (
           <button
             type="button"
-            className="mt-0.5 cursor-grab text-muted-foreground hover:text-foreground active:cursor-grabbing"
+            className="-m-2 mt-0.5 flex min-h-11 min-w-11 touch-none cursor-grab items-center justify-center text-muted-foreground hover:text-foreground active:cursor-grabbing"
             aria-label="Drag task"
             {...attributes}
             {...listeners}

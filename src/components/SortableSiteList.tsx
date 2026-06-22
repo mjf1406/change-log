@@ -2,10 +2,7 @@ import { useMemo, useState } from "react";
 import {
   DndContext,
   DragOverlay,
-  PointerSensor,
   closestCenter,
-  useSensor,
-  useSensors,
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
@@ -15,6 +12,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { SiteListItem } from "@/components/SiteListItem";
+import { useDndSensors } from "@/lib/dnd-sensors";
 import { buildSiteOrderTxs } from "@/lib/sites";
 import type { SiteWithLogo } from "@/lib/sites";
 
@@ -35,11 +33,7 @@ export function SortableSiteList({
 
   const siteIds = useMemo(() => sites.map((site) => site.id), [sites]);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 8 },
-    }),
-  );
+  const sensors = useDndSensors();
 
   const handleDragStart = (event: DragStartEvent) => {
     if (!isAdmin) return;

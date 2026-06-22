@@ -2,11 +2,10 @@ import { useMemo, useState } from "react";
 import {
   DndContext,
   DragOverlay,
-  PointerSensor,
   closestCorners,
+  pointerWithin,
   useDroppable,
-  useSensor,
-  useSensors,
+  type CollisionDetection,
   type DragEndEvent,
   type DragOverEvent,
   type DragStartEvent,
@@ -22,6 +21,7 @@ import { TaskCard } from "@/components/TaskCard";
 import { TaskDetailDialog } from "@/components/TaskDetailDialog";
 import { TaskFormDialog } from "@/components/TaskFormDialog";
 import { useIsAdmin } from "@/lib/admin";
+import { useDndSensors } from "@/lib/dnd-sensors";
 import { db } from "@/lib/db";
 import type { SiteWithTasks, Task } from "@/lib/sites";
 import {
@@ -60,6 +60,14 @@ function groupTasksByStatus(tasks: Task[]): ColumnTasks {
 function getContainerId(status: TaskStatus) {
   return `column-${status}`;
 }
+
+const collisionDetection: CollisionDetection = (args) => {
+  const pointerCollisions = pointerWithin(args);
+  if (pointerCollisions.length > 0) {
+    return pointerCollisions;
+  }
+  return closestCorners(args);
+};
 
 function parseContainerId(containerId: string): TaskStatus | null {
   if (!containerId.startsWith("column-")) return null;
@@ -157,11 +165,7 @@ export function KanbanBoard({ site }: KanbanBoardProps) {
 
   const displayColumns = columns ?? grouped;
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 8 },
-    }),
-  );
+  const sensors = useDndSensors();
 
   if (authLoading) {
     return <PageLoader />;
@@ -324,6 +328,12 @@ export function KanbanBoard({ site }: KanbanBoardProps) {
     }
   };
 
+  const handleDragCancel = () => {
+    setActiveTask(null);
+    setOriginStatus(null);
+    setColumns(null);
+  };
+
   const handleDeleteTask = async () => {
     if (!taskToDelete || !isAdmin) return;
     await db.transact(db.tx.tasks[taskToDelete.id].delete());
@@ -334,10 +344,11 @@ export function KanbanBoard({ site }: KanbanBoardProps) {
     <>
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCorners}
+        collisionDetection={collisionDetection}
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
       >
         <div className="grid gap-4 lg:grid-cols-3">
           {TASK_STATUSES.map((status) => (

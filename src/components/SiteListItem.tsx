@@ -51,7 +51,7 @@ export function SiteListItem({
       {isAdmin ? (
         <button
           type="button"
-          className="cursor-grab text-muted-foreground hover:text-foreground active:cursor-grabbing"
+          className="-m-2 flex min-h-11 min-w-11 touch-none cursor-grab items-center justify-center text-muted-foreground hover:text-foreground active:cursor-grabbing"
           aria-label={`Reorder ${site.name}`}
           {...attributes}
           {...listeners}
