@@ -110,15 +110,13 @@ export function SitePageHeader({ site, activeTab }: SitePageHeaderProps) {
         <Link
           to="/$site"
           params={{ site: site.slug }}
-          search={{ tab: "feed" }}
           className={cn(tabClass, activeTab === "feed" && tabActiveClass)}
         >
           Feed
         </Link>
         <Link
-          to="/$site"
+          to="/$site/board"
           params={{ site: site.slug }}
-          search={{ tab: "board" }}
           className={cn(tabClass, activeTab === "board" && tabActiveClass)}
         >
           Board

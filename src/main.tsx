@@ -9,7 +9,7 @@ const router = createRouter({
   routeTree,
   defaultPendingComponent: PageLoader,
   defaultPendingMs: 0,
-  defaultPendingMinMs: 300,
+  defaultPendingMinMs: 0,
   defaultPreload: "intent",
 });
 

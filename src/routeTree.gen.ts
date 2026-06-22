@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitesRouteImport } from './routes/sites'
+import { Route as SiteRouteRouteImport } from './routes/$site/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SiteIndexRouteImport } from './routes/$site/index'
 import { Route as SiteBoardRouteImport } from './routes/$site/board'
@@ -19,24 +20,30 @@ const SitesRoute = SitesRouteImport.update({
   path: '/sites',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SiteRouteRoute = SiteRouteRouteImport.update({
+  id: '/$site',
+  path: '/$site',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SiteIndexRoute = SiteIndexRouteImport.update({
-  id: '/$site/',
-  path: '/$site/',
-  getParentRoute: () => rootRouteImport,
+  id: '/',
+  path: '/',
+  getParentRoute: () => SiteRouteRoute,
 } as any)
 const SiteBoardRoute = SiteBoardRouteImport.update({
-  id: '/$site/board',
-  path: '/$site/board',
-  getParentRoute: () => rootRouteImport,
+  id: '/board',
+  path: '/board',
+  getParentRoute: () => SiteRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/$site': typeof SiteRouteRouteWithChildren
   '/sites': typeof SitesRoute
   '/$site/board': typeof SiteBoardRoute
   '/$site/': typeof SiteIndexRoute
@@ -50,23 +57,23 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/$site': typeof SiteRouteRouteWithChildren
   '/sites': typeof SitesRoute
   '/$site/board': typeof SiteBoardRoute
   '/$site/': typeof SiteIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/sites' | '/$site/board' | '/$site/'
+  fullPaths: '/' | '/$site' | '/sites' | '/$site/board' | '/$site/'
   fileRoutesByTo: FileRoutesByTo
   to: '/' | '/sites' | '/$site/board' | '/$site'
-  id: '__root__' | '/' | '/sites' | '/$site/board' | '/$site/'
+  id: '__root__' | '/' | '/$site' | '/sites' | '/$site/board' | '/$site/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  SiteRouteRoute: typeof SiteRouteRouteWithChildren
   SitesRoute: typeof SitesRoute
-  SiteBoardRoute: typeof SiteBoardRoute
-  SiteIndexRoute: typeof SiteIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -78,6 +85,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$site': {
+      id: '/$site'
+      path: '/$site'
+      fullPath: '/$site'
+      preLoaderRoute: typeof SiteRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -87,26 +101,39 @@ declare module '@tanstack/react-router' {
     }
     '/$site/': {
       id: '/$site/'
-      path: '/$site'
+      path: '/'
       fullPath: '/$site/'
       preLoaderRoute: typeof SiteIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof SiteRouteRoute
     }
     '/$site/board': {
       id: '/$site/board'
-      path: '/$site/board'
+      path: '/board'
       fullPath: '/$site/board'
       preLoaderRoute: typeof SiteBoardRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof SiteRouteRoute
     }
   }
 }
 
-const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  SitesRoute: SitesRoute,
+interface SiteRouteRouteChildren {
+  SiteBoardRoute: typeof SiteBoardRoute
+  SiteIndexRoute: typeof SiteIndexRoute
+}
+
+const SiteRouteRouteChildren: SiteRouteRouteChildren = {
   SiteBoardRoute: SiteBoardRoute,
   SiteIndexRoute: SiteIndexRoute,
+}
+
+const SiteRouteRouteWithChildren = SiteRouteRoute._addFileChildren(
+  SiteRouteRouteChildren,
+)
+
+const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
+  SiteRouteRoute: SiteRouteRouteWithChildren,
+  SitesRoute: SitesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

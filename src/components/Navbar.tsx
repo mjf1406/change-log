@@ -79,8 +79,6 @@ function SiteNavLinks({
           key={site.id}
           to="/$site"
           params={{ site: site.slug }}
-          search={{ tab: "feed" }}
-          includeSearch={false}
           onNavigate={onNavigate}
           className={className}
         >

@@ -139,7 +139,6 @@ export function DailyFeed({
                                 <Link
                                   to="/$site"
                                   params={{ site: task.site.slug }}
-                                  search={{ tab: "feed" }}
                                   className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
                                 >
                                   {task.site.name}
