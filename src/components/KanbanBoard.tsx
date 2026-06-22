@@ -16,6 +16,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
+import { QuickAddTask } from "@/components/QuickAddTask";
 import { PageLoader } from "@/components/PageLoader";
 import { TaskCard } from "@/components/TaskCard";
 import { TaskDetailDialog } from "@/components/TaskDetailDialog";
@@ -97,6 +98,7 @@ function resolveOverContainer(
 function KanbanColumn({
   status,
   tasks,
+  siteId,
   isAdmin,
   onEditTask,
   onViewTask,
@@ -104,6 +106,7 @@ function KanbanColumn({
 }: {
   status: TaskStatus;
   tasks: Task[];
+  siteId: string;
   isAdmin: boolean;
   onEditTask: (task: Task) => void;
   onViewTask: (task: Task) => void;
@@ -122,6 +125,12 @@ function KanbanColumn({
           {tasks.length} {tasks.length === 1 ? "task" : "tasks"}
         </p>
       </header>
+
+      {status === "todo" && isAdmin ? (
+        <div className="px-3 pt-3">
+          <QuickAddTask siteId={siteId} nextOrder={tasks.length} />
+        </div>
+      ) : null}
 
       <SortableContext
         id={getContainerId(status)}
@@ -352,6 +361,7 @@ export function KanbanBoard({ site }: KanbanBoardProps) {
               key={status}
               status={status}
               tasks={displayColumns[status]}
+              siteId={site.id}
               isAdmin={isAdmin}
               onEditTask={setEditingTask}
               onViewTask={setViewingTask}
