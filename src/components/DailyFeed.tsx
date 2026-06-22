@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ChevronUp } from "lucide-react";
 import {
@@ -13,13 +14,21 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { PageLoader } from "@/components/PageLoader";
-import { useDoneTasks, type Task } from "@/lib/sites";
+import { useDoneTasksFeed, type Task } from "@/lib/sites";
 import {
   daysToComplete,
   formatCompletedTime,
   formatDayKey,
   formatDayLabel,
+  formatWindowRange,
   isRecentFeedDay,
   toDate,
 } from "@/lib/tasks";
@@ -69,7 +78,13 @@ export function DailyFeed({
   showSiteBadge = false,
   emptyMessage = "No completed tasks yet.",
 }: DailyFeedProps) {
-  const { isLoading, error, tasks } = useDoneTasks(siteSlug);
+  const [pageIndex, setPageIndex] = useState(0);
+  const { isLoading, error, tasks, window, hasOlder, hasNewer } =
+    useDoneTasksFeed(siteSlug, pageIndex);
+
+  useEffect(() => {
+    setPageIndex(0);
+  }, [siteSlug]);
 
   if (isLoading) {
     return <PageLoader />;
@@ -84,6 +99,8 @@ export function DailyFeed({
   }
 
   const dayGroups = groupTasksByDay(tasks);
+  const windowLabel = formatWindowRange(window.startMs, window.endMs);
+  const showPagination = hasOlder || hasNewer;
 
   return (
     <section className="space-y-4">
@@ -91,7 +108,11 @@ export function DailyFeed({
         <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
         {description ? (
           <p className="text-sm text-muted-foreground">{description}</p>
-        ) : null}
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Completed tasks grouped by day, showing seven days per page.
+          </p>
+        )}
       </div>
 
       {dayGroups.length === 0 ? (
@@ -165,6 +186,46 @@ export function DailyFeed({
           ))}
         </div>
       )}
+
+      {showPagination ? (
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                href="#"
+                text="Older"
+                aria-disabled={!hasOlder}
+                className={
+                  !hasOlder ? "pointer-events-none opacity-50" : undefined
+                }
+                onClick={(event) => {
+                  event.preventDefault();
+                  if (hasOlder) setPageIndex((page) => page + 1);
+                }}
+              />
+            </PaginationItem>
+            <PaginationItem>
+              <span className="px-2 text-sm text-muted-foreground">
+                {windowLabel}
+              </span>
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationNext
+                href="#"
+                text="Newer"
+                aria-disabled={!hasNewer}
+                className={
+                  !hasNewer ? "pointer-events-none opacity-50" : undefined
+                }
+                onClick={(event) => {
+                  event.preventDefault();
+                  if (hasNewer) setPageIndex((page) => Math.max(0, page - 1));
+                }}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      ) : null}
     </section>
   );
 }

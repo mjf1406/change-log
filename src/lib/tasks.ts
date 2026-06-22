@@ -204,7 +204,35 @@ export function formatCompletedTime(date: Date): string {
   });
 }
 
-export function isRecentFeedDay(dayKey: string, windowDays = 3): boolean {
+export function getSevenDayWindow(pageIndex: number) {
+  const today = new Date();
+  const end = new Date(today);
+  end.setHours(23, 59, 59, 999);
+  end.setDate(end.getDate() - pageIndex * 7);
+
+  const start = new Date(end);
+  start.setHours(0, 0, 0, 0);
+  start.setDate(start.getDate() - 6);
+
+  return { startMs: start.getTime(), endMs: end.getTime() };
+}
+
+export function formatWindowRange(startMs: number, endMs: number): string {
+  const start = new Date(startMs);
+  const end = new Date(endMs);
+  const monthDay: Intl.DateTimeFormatOptions = {
+    month: "short",
+    day: "numeric",
+  };
+
+  if (start.getFullYear() !== end.getFullYear()) {
+    return `${start.toLocaleDateString(undefined, { ...monthDay, year: "numeric" })} – ${end.toLocaleDateString(undefined, { ...monthDay, year: "numeric" })}`;
+  }
+
+  return `${start.toLocaleDateString(undefined, monthDay)} – ${end.toLocaleDateString(undefined, { ...monthDay, year: "numeric" })}`;
+}
+
+export function isRecentFeedDay(dayKey: string, windowDays = 7): boolean {
   const today = new Date();
   for (let i = 0; i < windowDays; i++) {
     const d = new Date(today);

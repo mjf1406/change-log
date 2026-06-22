@@ -79,7 +79,7 @@ function HubPage() {
       <div className="space-y-10">
         <DailyFeed
           title="All completed"
-          description="Completed tasks across every site, grouped by day."
+          description="Completed tasks across every site, grouped by day. Seven days per page."
           showSiteBadge
           emptyMessage="No completed tasks yet across any site."
         />

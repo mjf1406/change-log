@@ -30,7 +30,7 @@ function SiteFeedPage() {
       <DailyFeed
         siteSlug={siteSlug}
         title="Completed"
-        description="Tasks completed for this site, grouped by day."
+        description="Tasks completed for this site, grouped by day. Seven days per page."
         emptyMessage="No completed tasks yet for this site."
       />
       <CompletionHeatmap siteSlug={siteSlug} />
