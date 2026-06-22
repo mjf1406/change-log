@@ -44,10 +44,9 @@ function SitesPage() {
     setDialogOpen(true);
   };
 
-  const handleDeleteSite = async () => {
+  const handleDeleteSite = () => {
     if (!siteToDelete) return;
-    await db.transact(db.tx.sites[siteToDelete.id].delete());
-    setSiteToDelete(null);
+    void db.transact(db.tx.sites[siteToDelete.id].delete());
   };
 
   return (

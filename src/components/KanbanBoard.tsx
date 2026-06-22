@@ -339,10 +339,9 @@ export function KanbanBoard({ site }: KanbanBoardProps) {
     setColumns(null);
   };
 
-  const handleDeleteTask = async () => {
+  const handleDeleteTask = () => {
     if (!taskToDelete || !isAdmin) return;
-    await db.transact(db.tx.tasks[taskToDelete.id].delete());
-    setTaskToDelete(null);
+    void db.transact(db.tx.tasks[taskToDelete.id].delete());
   };
 
   return (

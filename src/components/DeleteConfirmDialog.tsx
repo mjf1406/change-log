@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,16 +26,9 @@ export function DeleteConfirmDialog({
   confirmLabel = "Delete",
   onConfirm,
 }: DeleteConfirmDialogProps) {
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  const handleConfirm = async () => {
-    setIsDeleting(true);
-    try {
-      await onConfirm();
-      onOpenChange(false);
-    } finally {
-      setIsDeleting(false);
-    }
+  const handleConfirm = () => {
+    onConfirm();
+    onOpenChange(false);
   };
 
   return (
@@ -47,16 +39,15 @@ export function DeleteConfirmDialog({
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
-            disabled={isDeleting}
             onClick={(event) => {
               event.preventDefault();
-              void handleConfirm();
+              handleConfirm();
             }}
           >
-            {isDeleting ? "Deleting…" : confirmLabel}
+            {confirmLabel}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
