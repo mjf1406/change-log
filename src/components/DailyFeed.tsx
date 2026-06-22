@@ -21,11 +21,8 @@ import {
   formatDayKey,
   formatDayLabel,
   isRecentFeedDay,
+  toDate,
 } from "@/lib/tasks";
-
-function toDate(value: number | Date): Date {
-  return typeof value === "number" ? new Date(value) : value;
-}
 
 type DailyFeedProps = {
   siteSlug?: string;

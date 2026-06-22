@@ -99,14 +99,14 @@ function KanbanColumn({
   tasks,
   isAdmin,
   onEditTask,
-  onViewDescription,
+  onViewTask,
   onDeleteTask,
 }: {
   status: TaskStatus;
   tasks: Task[];
   isAdmin: boolean;
   onEditTask: (task: Task) => void;
-  onViewDescription: (task: Task) => void;
+  onViewTask: (task: Task) => void;
   onDeleteTask: (taskId: string) => void;
 }) {
   const { setNodeRef } = useDroppable({ id: getContainerId(status) });
@@ -134,12 +134,8 @@ function KanbanColumn({
               key={task.id}
               task={task}
               isAdmin={isAdmin}
+              onView={() => onViewTask(task)}
               onEdit={() => onEditTask(task)}
-              onViewDescription={
-                task.description
-                  ? () => onViewDescription(task)
-                  : undefined
-              }
               onDelete={() => onDeleteTask(task.id)}
             />
           ))}
@@ -358,7 +354,7 @@ export function KanbanBoard({ site }: KanbanBoardProps) {
               tasks={displayColumns[status]}
               isAdmin={isAdmin}
               onEditTask={setEditingTask}
-              onViewDescription={setViewingTask}
+              onViewTask={setViewingTask}
               onDeleteTask={(taskId) => {
                 const task = (site.tasks as Task[]).find(
                   (item) => item.id === taskId,

@@ -80,6 +80,95 @@ export function buildColumnPersistTxs(
   return txs;
 }
 
+export function toDate(value: number | Date): Date {
+  return typeof value === "number" ? new Date(value) : value;
+}
+
+export function formatTaskDateTime(date: Date): string {
+  return date.toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+export function formatDuration(start: Date, end: Date): string {
+  const ms = Math.max(0, end.getTime() - start.getTime());
+  const minutes = Math.floor(ms / (1000 * 60));
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  if (days > 0) {
+    const remainingHours = hours % 24;
+    return remainingHours > 0 ? `${days}d ${remainingHours}h` : `${days}d`;
+  }
+
+  if (hours > 0) {
+    const remainingMinutes = minutes % 60;
+    return remainingMinutes > 0
+      ? `${hours}h ${remainingMinutes}m`
+      : `${hours}h`;
+  }
+
+  if (minutes > 0) {
+    return `${minutes}m`;
+  }
+
+  return "same day";
+}
+
+export type TaskDetailTimingRow = {
+  label: string;
+  value: string;
+};
+
+export function getTaskDetailTiming(task: Task): TaskDetailTimingRow[] {
+  const status = task.status as TaskStatus;
+  const createdAt = toDate(task.createdAt);
+  const startedAt = task.startedAt;
+  const completedAt = task.completedAt;
+
+  const rows: TaskDetailTimingRow[] = [
+    {
+      label: "Status",
+      value: TASK_STATUSES.includes(status)
+        ? TASK_STATUS_LABELS[status]
+        : task.status,
+    },
+    { label: "Created", value: formatTaskDateTime(createdAt) },
+    {
+      label: "Started",
+      value:
+        startedAt != null ? formatTaskDateTime(toDate(startedAt)) : "Not started",
+    },
+    {
+      label: "Completed",
+      value:
+        completedAt != null
+          ? formatTaskDateTime(toDate(completedAt))
+          : "Not completed",
+    },
+  ];
+
+  if (completedAt != null) {
+    const completedDate = toDate(completedAt);
+    rows.push({
+      label: "Active time",
+      value:
+        startedAt != null
+          ? formatDuration(toDate(startedAt), completedDate)
+          : "Skipped Doing",
+    });
+    rows.push({
+      label: "Total time",
+      value: formatDuration(createdAt, completedDate),
+    });
+  }
+
+  return rows;
+}
+
 export function daysToComplete(createdAt: Date, completedAt: Date): string {
   const ms = completedAt.getTime() - createdAt.getTime();
   const days = Math.floor(ms / (1000 * 60 * 60 * 24));

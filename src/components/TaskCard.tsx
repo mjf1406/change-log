@@ -1,16 +1,17 @@
-import { GripVertical, FileText, Pencil, Trash2 } from "lucide-react";
+import { GripVertical, Pencil, Trash2 } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/components/ui/button";
 import type { Task } from "@/lib/sites";
+import { formatTaskDateTime, toDate } from "@/lib/tasks";
 import { cn } from "@/lib/utils";
 
 type TaskCardProps = {
   task: Task;
   isAdmin: boolean;
   isOverlay?: boolean;
+  onView?: () => void;
   onEdit?: () => void;
-  onViewDescription?: () => void;
   onDelete?: () => void;
 };
 
@@ -18,8 +19,8 @@ export function TaskCard({
   task,
   isAdmin,
   isOverlay = false,
+  onView,
   onEdit,
-  onViewDescription,
   onDelete,
 }: TaskCardProps) {
   const {
@@ -62,31 +63,32 @@ export function TaskCard({
           </button>
         ) : null}
 
-        <div className="min-w-0 flex-1">
+        <button
+          type="button"
+          onClick={onView}
+          disabled={!onView || isOverlay}
+          className={cn(
+            "min-w-0 flex-1 space-y-1 text-left",
+            onView && !isOverlay && "cursor-pointer rounded-sm hover:opacity-80",
+          )}
+        >
           <p className="text-sm font-medium leading-snug">{task.text}</p>
-        </div>
+          <p className="text-xs text-muted-foreground">
+            Created · {formatTaskDateTime(toDate(task.createdAt))}
+          </p>
+        </button>
 
         <div className="flex shrink-0 items-center gap-0.5">
-          {task.description && onViewDescription ? (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-xs"
-              className="text-muted-foreground hover:text-foreground"
-              onClick={onViewDescription}
-              aria-label="View task description"
-            >
-              <FileText className="size-3.5" />
-            </Button>
-          ) : null}
-
           {isAdmin && onEdit ? (
             <Button
               type="button"
               variant="ghost"
               size="icon-xs"
               aria-label="Edit task"
-              onClick={onEdit}
+              onClick={(event) => {
+                event.stopPropagation();
+                onEdit();
+              }}
             >
               <Pencil className="size-3.5" />
             </Button>
@@ -98,7 +100,10 @@ export function TaskCard({
               variant="ghost"
               size="icon-xs"
               className="text-muted-foreground hover:text-destructive"
-              onClick={onDelete}
+              onClick={(event) => {
+                event.stopPropagation();
+                onDelete();
+              }}
               aria-label="Delete task"
             >
               <Trash2 className="size-3.5" />
