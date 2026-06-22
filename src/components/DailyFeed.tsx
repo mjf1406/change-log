@@ -1,17 +1,26 @@
 import { Link } from "@tanstack/react-router";
+import { ChevronUp } from "lucide-react";
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { PageLoader } from "@/components/PageLoader";
 import { useDoneTasks, type Task } from "@/lib/sites";
 import {
   daysToComplete,
+  formatCompletedTime,
   formatDayKey,
   formatDayLabel,
+  isRecentFeedDay,
 } from "@/lib/tasks";
 
 function toDate(value: number | Date): Date {
@@ -97,51 +106,65 @@ export function DailyFeed({
       ) : (
         <div className="space-y-4">
           {dayGroups.map((group) => (
-            <Card key={group.key}>
-              <CardHeader className="border-b border-border pb-4">
-                <CardTitle>{group.label}</CardTitle>
-                <CardDescription>
-                  {group.tasks.length}{" "}
-                  {group.tasks.length === 1 ? "task" : "tasks"} completed
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3 pt-4">
-                {group.tasks.map((task) => {
-                  const createdAt = toDate(task.createdAt);
-                  const completedAt = toDate(task.completedAt!);
+            <Collapsible
+              key={group.key}
+              className="group"
+              defaultOpen={isRecentFeedDay(group.key)}
+            >
+              <Card>
+                <CollapsibleTrigger asChild>
+                  <CardHeader className="cursor-pointer border-b border-border pb-4">
+                    <CardTitle>{group.label}</CardTitle>
+                    <CardDescription>
+                      {group.tasks.length}{" "}
+                      {group.tasks.length === 1 ? "task" : "tasks"} completed
+                    </CardDescription>
+                    <CardAction>
+                      <ChevronUp className="size-8 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                    </CardAction>
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="space-y-3 pt-4">
+                    {group.tasks.map((task) => {
+                      const createdAt = toDate(task.createdAt);
+                      const completedAt = toDate(task.completedAt!);
 
-                  return (
-                    <div
-                      key={task.id}
-                      className="flex items-start justify-between gap-4 rounded-lg border border-border bg-muted/20 px-4 py-3"
-                    >
-                      <div className="min-w-0 space-y-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="font-medium">{task.text}</p>
-                          {showSiteBadge && task.site ? (
-                            <Link
-                              to="/$site"
-                              params={{ site: task.site.slug }}
-                              className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-                            >
-                              {task.site.name}
-                            </Link>
-                          ) : null}
+                      return (
+                        <div
+                          key={task.id}
+                          className="flex items-start justify-between gap-4 rounded-lg border border-border bg-muted/20 px-4 py-3"
+                        >
+                          <div className="min-w-0 space-y-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="font-medium">{task.text}</p>
+                              {showSiteBadge && task.site ? (
+                                <Link
+                                  to="/$site"
+                                  params={{ site: task.site.slug }}
+                                  className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+                                >
+                                  {task.site.name}
+                                </Link>
+                              ) : null}
+                            </div>
+                            {task.description ? (
+                              <p className="text-sm text-muted-foreground">
+                                {task.description}
+                              </p>
+                            ) : null}
+                          </div>
+                          <div className="shrink-0 text-right text-xs text-muted-foreground">
+                            <p>{formatCompletedTime(completedAt)}</p>
+                            <p>{daysToComplete(createdAt, completedAt)}</p>
+                          </div>
                         </div>
-                        {task.description ? (
-                          <p className="text-sm text-muted-foreground">
-                            {task.description}
-                          </p>
-                        ) : null}
-                      </div>
-                      <span className="shrink-0 text-xs text-muted-foreground">
-                        {daysToComplete(createdAt, completedAt)}
-                      </span>
-                    </div>
-                  );
-                })}
-              </CardContent>
-            </Card>
+                      );
+                    })}
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
           ))}
         </div>
       )}

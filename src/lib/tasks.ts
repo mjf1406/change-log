@@ -108,6 +108,23 @@ export function formatDayLabel(date: Date): string {
   });
 }
 
+export function formatCompletedTime(date: Date): string {
+  return date.toLocaleTimeString(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+export function isRecentFeedDay(dayKey: string, windowDays = 3): boolean {
+  const today = new Date();
+  for (let i = 0; i < windowDays; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    if (formatDayKey(d) === dayKey) return true;
+  }
+  return false;
+}
+
 export function slugify(value: string): string {
   return value
     .toLowerCase()
