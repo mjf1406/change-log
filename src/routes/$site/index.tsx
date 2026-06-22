@@ -1,21 +1,38 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { LayoutGrid } from "lucide-react";
+import { useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { Plus } from "lucide-react";
+import { z } from "zod";
+import { CompletionHeatmap } from "@/components/CompletionHeatmap";
 import { DailyFeed } from "@/components/DailyFeed";
+import {
+  getTodoColumnLength,
+  KanbanBoard,
+} from "@/components/KanbanBoard";
 import { PageLoader } from "@/components/PageLoader";
-import { SiteAvatar } from "@/components/SiteAvatar";
 import { SiteNotFound } from "@/components/SiteNotFound";
+import { SitePageHeader } from "@/components/SitePageHeader";
+import { TaskFormDialog } from "@/components/TaskFormDialog";
 import { Button } from "@/components/ui/button";
+import { useIsAdmin } from "@/lib/admin";
 import { useSiteBySlug } from "@/lib/sites";
 
-export const Route = createFileRoute("/$site/")({
-  component: SiteFeedPage,
+const siteSearchSchema = z.object({
+  tab: z.enum(["feed", "board"]).catch("feed"),
 });
 
-function SiteFeedPage() {
-  const { site: siteSlug } = Route.useParams();
-  const { isLoading, site } = useSiteBySlug(siteSlug);
+export const Route = createFileRoute("/$site/")({
+  validateSearch: siteSearchSchema,
+  component: SitePage,
+});
 
-  if (isLoading) {
+function SitePage() {
+  const { site: siteSlug } = Route.useParams();
+  const { tab } = Route.useSearch();
+  const { isLoading: authLoading, isAdmin } = useIsAdmin();
+  const { isLoading, site } = useSiteBySlug(siteSlug);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+
+  if (isLoading || authLoading) {
     return <PageLoader />;
   }
 
@@ -25,36 +42,41 @@ function SiteFeedPage() {
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-10">
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex items-start gap-4">
-          <SiteAvatar
-            name={site.name}
-            logoUrl={site.logo?.url}
-            className="size-14"
-          />
-          <div className="space-y-2">
-            <h1 className="text-3xl font-semibold tracking-tight">
-              {site.name}
-            </h1>
-            {site.description ? (
-              <p className="text-muted-foreground">{site.description}</p>
-            ) : null}
-          </div>
-        </div>
-        <Button variant="outline" asChild>
-          <Link to="/$site/board" params={{ site: site.slug }}>
-            <LayoutGrid data-icon="inline-start" />
-            View board
-          </Link>
-        </Button>
-      </div>
+      <SitePageHeader site={site} activeTab={tab} />
 
-      <DailyFeed
-        siteSlug={site.slug}
-        title="Completed"
-        description="Tasks completed for this site, grouped by day."
-        emptyMessage="No completed tasks yet for this site."
-      />
+      {tab === "feed" ? (
+        <div className="space-y-10">
+          <DailyFeed
+            siteSlug={site.slug}
+            title="Completed"
+            description="Tasks completed for this site, grouped by day."
+            emptyMessage="No completed tasks yet for this site."
+          />
+          <CompletionHeatmap siteSlug={site.slug} />
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {isAdmin ? (
+            <div className="flex justify-end">
+              <Button onClick={() => setCreateDialogOpen(true)}>
+                <Plus data-icon="inline-start" />
+                Add task
+              </Button>
+            </div>
+          ) : null}
+          <KanbanBoard site={site} />
+        </div>
+      )}
+
+      {isAdmin ? (
+        <TaskFormDialog
+          open={createDialogOpen}
+          onOpenChange={setCreateDialogOpen}
+          mode="create"
+          siteId={site.id}
+          nextOrder={getTodoColumnLength(site)}
+        />
+      ) : null}
     </main>
   );
 }

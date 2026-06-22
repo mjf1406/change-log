@@ -49,6 +49,7 @@ function HubPage() {
                 key={site.id}
                 to="/$site"
                 params={{ site: site.slug }}
+                search={{ tab: "feed" }}
                 className="group block rounded-xl focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
               >
                 <Card className="h-full transition-colors group-hover:bg-muted/40">

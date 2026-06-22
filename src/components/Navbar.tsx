@@ -24,15 +24,19 @@ const navLinkActiveClass = "bg-muted text-foreground";
 function NavLink({
   to,
   params,
+  search,
   children,
   exact = false,
+  includeSearch = true,
   onNavigate,
   className,
 }: {
   to: string;
   params?: Record<string, string>;
+  search?: Record<string, string>;
   children: ReactNode;
   exact?: boolean;
+  includeSearch?: boolean;
   onNavigate?: () => void;
   className?: string;
 }) {
@@ -40,7 +44,8 @@ function NavLink({
     <Link
       to={to}
       params={params}
-      activeOptions={{ exact }}
+      search={search}
+      activeOptions={{ exact, includeSearch }}
       onClick={onNavigate}
       className={cn(navLinkClass, className)}
       activeProps={{
@@ -74,6 +79,8 @@ function SiteNavLinks({
           key={site.id}
           to="/$site"
           params={{ site: site.slug }}
+          search={{ tab: "feed" }}
+          includeSearch={false}
           onNavigate={onNavigate}
           className={className}
         >
