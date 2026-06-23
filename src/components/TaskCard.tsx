@@ -1,9 +1,10 @@
-import { GripVertical, Pencil, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Check, Copy, GripVertical, Pencil, Trash2 } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/components/ui/button";
 import type { Task } from "@/lib/sites";
-import { formatTaskDateTime, toDate } from "@/lib/tasks";
+import { formatTaskDateTime, formatTaskForCopy, toDate } from "@/lib/tasks";
 import { cn } from "@/lib/utils";
 
 type TaskCardProps = {
@@ -23,6 +24,15 @@ export function TaskCard({
   onEdit,
   onDelete,
 }: TaskCardProps) {
+  const [copied, setCopied] = useState(false);
+  const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+    };
+  }, []);
+
   const {
     attributes,
     listeners,
@@ -79,6 +89,39 @@ export function TaskCard({
         </button>
 
         <div className="flex shrink-0 items-center gap-0.5">
+          {!isOverlay ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              aria-label={copied ? "Copied" : "Copy task"}
+              onClick={(event) => {
+                event.stopPropagation();
+                void navigator.clipboard
+                  .writeText(formatTaskForCopy(task))
+                  .then(() => {
+                    setCopied(true);
+                    if (copyTimeoutRef.current) {
+                      clearTimeout(copyTimeoutRef.current);
+                    }
+                    copyTimeoutRef.current = setTimeout(
+                      () => setCopied(false),
+                      1500,
+                    );
+                  })
+                  .catch((error) => {
+                    console.error("Failed to copy task", error);
+                  });
+              }}
+            >
+              {copied ? (
+                <Check className="size-3.5" />
+              ) : (
+                <Copy className="size-3.5" />
+              )}
+            </Button>
+          ) : null}
+
           {isAdmin && onEdit ? (
             <Button
               type="button"

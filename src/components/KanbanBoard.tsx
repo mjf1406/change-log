@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Check, Copy } from "lucide-react";
 import {
   DndContext,
   DragOverlay,
@@ -21,6 +22,7 @@ import { PageLoader } from "@/components/PageLoader";
 import { TaskCard } from "@/components/TaskCard";
 import { TaskDetailDialog } from "@/components/TaskDetailDialog";
 import { TaskFormDialog } from "@/components/TaskFormDialog";
+import { Button } from "@/components/ui/button";
 import { useIsAdmin } from "@/lib/admin";
 import { useDndSensors } from "@/lib/dnd-sensors";
 import { db } from "@/lib/db";
@@ -29,6 +31,7 @@ import {
   TASK_STATUSES,
   TASK_STATUS_LABELS,
   buildColumnPersistTxs,
+  formatTasksForColumnCopy,
   type ColumnTasks,
   type TaskStatus,
 } from "@/lib/tasks";
@@ -113,17 +116,66 @@ function KanbanColumn({
   onDeleteTask: (taskId: string) => void;
 }) {
   const { setNodeRef } = useDroppable({ id: getContainerId(status) });
+  const [copied, setCopied] = useState(false);
+  const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const columnCopyText = useMemo(
+    () => formatTasksForColumnCopy(tasks),
+    [tasks],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+    };
+  }, []);
 
   return (
     <section
       ref={setNodeRef}
       className="flex min-h-64 flex-col rounded-xl border border-border bg-muted/20"
     >
-      <header className="border-b border-border px-4 py-3">
-        <h3 className="text-sm font-semibold">{TASK_STATUS_LABELS[status]}</h3>
-        <p className="text-xs text-muted-foreground">
-          {tasks.length} {tasks.length === 1 ? "task" : "tasks"}
-        </p>
+      <header className="flex items-start justify-between gap-2 border-b border-border px-4 py-3">
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold">{TASK_STATUS_LABELS[status]}</h3>
+          <p className="text-xs text-muted-foreground">
+            {tasks.length} {tasks.length === 1 ? "task" : "tasks"}
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-xs"
+          className="shrink-0"
+          disabled={tasks.length === 0}
+          aria-label={
+            copied
+              ? "Copied column"
+              : `Copy all ${TASK_STATUS_LABELS[status]} tasks`
+          }
+          onClick={() => {
+            void navigator.clipboard
+              .writeText(columnCopyText)
+              .then(() => {
+                setCopied(true);
+                if (copyTimeoutRef.current) {
+                  clearTimeout(copyTimeoutRef.current);
+                }
+                copyTimeoutRef.current = setTimeout(
+                  () => setCopied(false),
+                  1500,
+                );
+              })
+              .catch((error) => {
+                console.error("Failed to copy column tasks", error);
+              });
+          }}
+        >
+          {copied ? (
+            <Check className="size-3.5" />
+          ) : (
+            <Copy className="size-3.5" />
+          )}
+        </Button>
       </header>
 
       {status === "todo" && isAdmin ? (

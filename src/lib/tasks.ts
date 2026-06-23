@@ -93,6 +93,22 @@ export function formatTaskDateTime(date: Date): string {
   });
 }
 
+export function formatTaskForCopy(
+  task: Pick<Task, "text" | "description">,
+): string {
+  const title = task.text.trim();
+  const description = task.description?.trim();
+  const titleLine = `- ${title}`;
+  if (!description) return titleLine;
+  return `${titleLine}\n-- ${description}`;
+}
+
+export function formatTasksForColumnCopy(
+  tasks: Pick<Task, "text" | "description">[],
+): string {
+  return tasks.map(formatTaskForCopy).join("\n");
+}
+
 export function formatDuration(start: Date, end: Date): string {
   const ms = Math.max(0, end.getTime() - start.getTime());
   const minutes = Math.floor(ms / (1000 * 60));
