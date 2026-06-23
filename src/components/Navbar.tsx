@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useMatchRoute } from "@tanstack/react-router";
 import { LogIn, LogOut, Menu, Plus, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -65,6 +65,7 @@ function SiteNavLinks({
   className?: string;
 }) {
   const { isLoading, sites } = useSites();
+  const matchRoute = useMatchRoute();
 
   if (isLoading) {
     return (
@@ -74,17 +75,28 @@ function SiteNavLinks({
 
   return (
     <>
-      {sites.map((site) => (
-        <NavLink
-          key={site.id}
-          to="/$site"
-          params={{ site: site.slug }}
-          onNavigate={onNavigate}
-          className={className}
-        >
-          {site.name}
-        </NavLink>
-      ))}
+      {sites.map((site) => {
+        const isActive = !!matchRoute({
+          to: "/$site",
+          params: { site: site.slug },
+        });
+
+        return (
+          <Link
+            key={site.id}
+            to="/$site/board"
+            params={{ site: site.slug }}
+            onClick={onNavigate}
+            className={cn(
+              navLinkClass,
+              isActive && navLinkActiveClass,
+              className,
+            )}
+          >
+            {site.name}
+          </Link>
+        );
+      })}
     </>
   );
 }
