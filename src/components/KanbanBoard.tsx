@@ -223,6 +223,7 @@ function KanbanColumn({
               key={task.id}
               task={task}
               isAdmin={isAdmin}
+              truncateTitle={status === "done"}
               onView={() => onViewTask(task)}
               onEdit={() => onEditTask(task)}
               onDelete={() => onDeleteTask(task.id)}

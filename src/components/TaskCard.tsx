@@ -14,6 +14,7 @@ type TaskCardProps = {
   isAdmin: boolean;
   variant?: "board" | "archived";
   isOverlay?: boolean;
+  truncateTitle?: boolean;
   onView?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
@@ -24,6 +25,7 @@ export function TaskCard({
   isAdmin,
   variant = "board",
   isOverlay = false,
+  truncateTitle = false,
   onView,
   onEdit,
   onDelete,
@@ -34,6 +36,7 @@ export function TaskCard({
         task={task}
         isAdmin={isAdmin}
         isOverlay={isOverlay}
+        truncateTitle={truncateTitle}
         onView={onView}
         onEdit={onEdit}
         onDelete={onDelete}
@@ -46,6 +49,7 @@ export function TaskCard({
       task={task}
       isAdmin={isAdmin}
       isOverlay={isOverlay}
+      truncateTitle={truncateTitle}
       onView={onView}
       onEdit={onEdit}
       onDelete={onDelete}
@@ -65,6 +69,7 @@ type TaskCardContentProps = {
   };
   setNodeRef?: (node: HTMLElement | null) => void;
   style?: React.CSSProperties;
+  truncateTitle?: boolean;
   onView?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
@@ -79,6 +84,7 @@ function TaskCardContent({
   dragHandleProps,
   setNodeRef,
   style,
+  truncateTitle = false,
   onView,
   onEdit,
   onDelete,
@@ -130,7 +136,15 @@ function TaskCardContent({
             onView && !isOverlay && "cursor-pointer rounded-sm hover:opacity-80",
           )}
         >
-          <p className="text-sm font-medium leading-snug">{task.text}</p>
+          <p
+            className={cn(
+              "text-sm font-medium leading-snug",
+              truncateTitle && "truncate",
+            )}
+            title={truncateTitle ? task.text : undefined}
+          >
+            {task.text}
+          </p>
           <p className="text-xs text-muted-foreground">{subtitle}</p>
         </button>
 
@@ -208,6 +222,7 @@ function BoardTaskCard({
   task,
   isAdmin,
   isOverlay = false,
+  truncateTitle = false,
   onView,
   onEdit,
   onDelete,
@@ -239,6 +254,7 @@ function BoardTaskCard({
       dragHandleProps={
         isAdmin ? { attributes, listeners } : undefined
       }
+      truncateTitle={truncateTitle}
       onView={onView}
       onEdit={onEdit}
       onDelete={onDelete}
@@ -250,6 +266,7 @@ function ArchivedTaskCard({
   task,
   isAdmin,
   isOverlay = false,
+  truncateTitle = false,
   onView,
   onEdit,
   onDelete,
@@ -274,6 +291,7 @@ function ArchivedTaskCard({
       dragHandleProps={
         isAdmin ? { attributes, listeners } : undefined
       }
+      truncateTitle={truncateTitle}
       onView={onView}
       onEdit={onEdit}
       onDelete={onDelete}
