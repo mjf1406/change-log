@@ -142,6 +142,16 @@ function TaskFormDialogContent({
       </DialogHeader>
 
       <form
+        onKeyDown={(event) => {
+          if (
+            (event.ctrlKey || event.metaKey) &&
+            event.key === "Enter" &&
+            !form.state.isSubmitting
+          ) {
+            event.preventDefault();
+            void form.handleSubmit();
+          }
+        }}
         onSubmit={(event) => {
           event.preventDefault();
           event.stopPropagation();
