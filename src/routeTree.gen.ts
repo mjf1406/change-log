@@ -9,12 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WorkOrderRouteImport } from './routes/work-order'
 import { Route as SitesRouteImport } from './routes/sites'
 import { Route as SiteRouteRouteImport } from './routes/$site/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SiteIndexRouteImport } from './routes/$site/index'
 import { Route as SiteBoardRouteImport } from './routes/$site/board'
 
+const WorkOrderRoute = WorkOrderRouteImport.update({
+  id: '/work-order',
+  path: '/work-order',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitesRoute = SitesRouteImport.update({
   id: '/sites',
   path: '/sites',
@@ -45,12 +51,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$site': typeof SiteRouteRouteWithChildren
   '/sites': typeof SitesRoute
+  '/work-order': typeof WorkOrderRoute
   '/$site/board': typeof SiteBoardRoute
   '/$site/': typeof SiteIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/sites': typeof SitesRoute
+  '/work-order': typeof WorkOrderRoute
   '/$site/board': typeof SiteBoardRoute
   '/$site': typeof SiteIndexRoute
 }
@@ -59,25 +67,47 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/$site': typeof SiteRouteRouteWithChildren
   '/sites': typeof SitesRoute
+  '/work-order': typeof WorkOrderRoute
   '/$site/board': typeof SiteBoardRoute
   '/$site/': typeof SiteIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/$site' | '/sites' | '/$site/board' | '/$site/'
+  fullPaths:
+    | '/'
+    | '/$site'
+    | '/sites'
+    | '/work-order'
+    | '/$site/board'
+    | '/$site/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/sites' | '/$site/board' | '/$site'
-  id: '__root__' | '/' | '/$site' | '/sites' | '/$site/board' | '/$site/'
+  to: '/' | '/sites' | '/work-order' | '/$site/board' | '/$site'
+  id:
+    | '__root__'
+    | '/'
+    | '/$site'
+    | '/sites'
+    | '/work-order'
+    | '/$site/board'
+    | '/$site/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SiteRouteRoute: typeof SiteRouteRouteWithChildren
   SitesRoute: typeof SitesRoute
+  WorkOrderRoute: typeof WorkOrderRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/work-order': {
+      id: '/work-order'
+      path: '/work-order'
+      fullPath: '/work-order'
+      preLoaderRoute: typeof WorkOrderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sites': {
       id: '/sites'
       path: '/sites'
@@ -134,6 +164,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SiteRouteRoute: SiteRouteRouteWithChildren,
   SitesRoute: SitesRoute,
+  WorkOrderRoute: WorkOrderRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

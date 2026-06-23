@@ -52,6 +52,27 @@ export function useSiteBySlug(slug: string) {
   };
 }
 
+export function useWorkOrderSites() {
+  const { isLoading, error, data } = db.useQuery({
+    sites: {
+      $: { order: { order: "asc" } },
+      tasks: {
+        $: {
+          where: { status: { $in: ["todo", "doing"] } },
+          order: { order: "asc" },
+        },
+      },
+      logo: {},
+    },
+  });
+
+  return {
+    isLoading,
+    error,
+    sites: (data?.sites ?? []) as SiteWithTasks[],
+  };
+}
+
 export function useDoneTasks(siteSlug?: string) {
   const { isLoading, error, data } = db.useQuery({
     tasks: {

@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { Link, useMatchRoute } from "@tanstack/react-router";
-import { LogIn, LogOut, Menu, Plus, Settings2 } from "lucide-react";
+import { ClipboardList, LogIn, LogOut, Menu, Plus, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -150,6 +150,16 @@ function AuthActions({
             variant="outline"
             size="icon-sm"
             asChild
+            aria-label="Work order"
+          >
+            <Link to="/work-order">
+              <ClipboardList />
+            </Link>
+          </Button>
+          <Button
+            variant="outline"
+            size="icon-sm"
+            asChild
             aria-label="Manage sites"
           >
             <Link to="/sites">
@@ -231,6 +241,16 @@ function MobileNav({
             <div className="flex items-center justify-center gap-2">
               {isAdmin ? (
                 <>
+                  <Button
+                    variant="outline"
+                    size="icon-sm"
+                    asChild
+                    aria-label="Work order"
+                  >
+                    <Link to="/work-order" onClick={close}>
+                      <ClipboardList />
+                    </Link>
+                  </Button>
                   <Button
                     variant="outline"
                     size="icon-sm"
