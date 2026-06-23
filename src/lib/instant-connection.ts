@@ -1,9 +1,8 @@
-import { createElement, useEffect, useRef, useState } from "react";
+import { createElement, useCallback, useEffect, useRef, useState } from "react";
 import { CircleCheck, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { db } from "@/lib/db";
 
-const TOAST_ID = "instant-connection";
 const SYNC_FALLBACK_MS = 2000;
 const SYNC_MIN_DISPLAY_MS = 400;
 const RECONNECTED_DISPLAY_MS = 2000;
@@ -25,6 +24,10 @@ const spinnerIcon = createElement(Loader2, {
   className: "size-4 animate-spin text-sky-600 dark:text-sky-400",
 });
 
+const checkIcon = createElement(CircleCheck, {
+  className: "size-4 text-emerald-600 dark:text-emerald-400",
+});
+
 export type InstantConnectionUi =
   | "hidden"
   | "reconnecting"
@@ -35,7 +38,20 @@ export function useInstantConnectionToasts() {
   const status = db.useConnectionStatus();
   const hasConnectedRef = useRef(false);
   const phaseRef = useRef<InstantConnectionUi>("hidden");
+  const activeToastIdsRef = useRef<Array<string | number>>([]);
   const [uiState, setUiState] = useState<InstantConnectionUi>("hidden");
+
+  const trackToast = useCallback((id: string | number) => {
+    activeToastIdsRef.current.push(id);
+    return id;
+  }, []);
+
+  const dismissCycleToasts = useCallback(() => {
+    for (const id of activeToastIdsRef.current) {
+      toast.dismiss(id);
+    }
+    activeToastIdsRef.current = [];
+  }, []);
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -66,37 +82,35 @@ export function useInstantConnectionToasts() {
 
   useEffect(() => {
     if (uiState === "reconnecting") {
-      toast.info("Reconnecting…", {
-        id: TOAST_ID,
-        duration: Infinity,
-        icon: spinnerIcon,
-      });
+      dismissCycleToasts();
+      trackToast(
+        toast.info("Reconnecting…", {
+          duration: Infinity,
+          icon: spinnerIcon,
+        }),
+      );
       return;
     }
 
     if (uiState === "reconnected") {
-      toast.dismiss(TOAST_ID);
-      toast.success("Reconnected", {
-        id: TOAST_ID,
-        duration: Infinity,
-        icon: createElement(CircleCheck, {
-          className: "size-4 text-emerald-600 dark:text-emerald-400",
+      trackToast(
+        toast.success("Reconnected", {
+          duration: Infinity,
+          icon: checkIcon,
         }),
-      });
+      );
       return;
     }
 
     if (uiState === "syncing") {
-      toast.dismiss(TOAST_ID);
-      toast.info("Syncing changes…", {
-        id: TOAST_ID,
-        duration: Infinity,
-        icon: createElement(Loader2, {
-          className: "size-4 animate-spin text-sky-600 dark:text-sky-400",
+      trackToast(
+        toast.info("Syncing changes…", {
+          duration: Infinity,
+          icon: spinnerIcon,
         }),
-      });
+      );
     }
-  }, [uiState]);
+  }, [uiState, dismissCycleToasts, trackToast]);
 
   useEffect(() => {
     if (uiState !== "syncing") return;
@@ -116,7 +130,7 @@ export function useInstantConnectionToasts() {
         resolved = true;
         phaseRef.current = "hidden";
         setUiState("hidden");
-        toast.dismiss(TOAST_ID);
+        dismissCycleToasts();
       }, remaining);
     };
 
@@ -136,5 +150,5 @@ export function useInstantConnectionToasts() {
       if (minDisplayTimer) clearTimeout(minDisplayTimer);
       unsub();
     };
-  }, [uiState]);
+  }, [uiState, dismissCycleToasts]);
 }
