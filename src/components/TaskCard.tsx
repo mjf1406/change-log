@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Check, Copy, GripVertical, Pencil, Trash2 } from "lucide-react";
+import { useDraggable, type DraggableAttributes } from "@dnd-kit/core";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 import { Button } from "@/components/ui/button";
 import type { Task } from "@/lib/sites";
 import { formatTaskDateTime, formatTaskForCopy, toDate } from "@/lib/tasks";
@@ -10,6 +12,7 @@ import { cn } from "@/lib/utils";
 type TaskCardProps = {
   task: Task;
   isAdmin: boolean;
+  variant?: "board" | "archived";
   isOverlay?: boolean;
   onView?: () => void;
   onEdit?: () => void;
@@ -19,11 +22,67 @@ type TaskCardProps = {
 export function TaskCard({
   task,
   isAdmin,
+  variant = "board",
   isOverlay = false,
   onView,
   onEdit,
   onDelete,
 }: TaskCardProps) {
+  if (variant === "archived") {
+    return (
+      <ArchivedTaskCard
+        task={task}
+        isAdmin={isAdmin}
+        isOverlay={isOverlay}
+        onView={onView}
+        onEdit={onEdit}
+        onDelete={onDelete}
+      />
+    );
+  }
+
+  return (
+    <BoardTaskCard
+      task={task}
+      isAdmin={isAdmin}
+      isOverlay={isOverlay}
+      onView={onView}
+      onEdit={onEdit}
+      onDelete={onDelete}
+    />
+  );
+}
+
+type TaskCardContentProps = {
+  task: Task;
+  isAdmin: boolean;
+  variant: "board" | "archived";
+  isOverlay?: boolean;
+  isDragging?: boolean;
+  dragHandleProps?: {
+    attributes: DraggableAttributes;
+    listeners: SyntheticListenerMap | undefined;
+  };
+  setNodeRef?: (node: HTMLElement | null) => void;
+  style?: React.CSSProperties;
+  onView?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
+};
+
+function TaskCardContent({
+  task,
+  isAdmin,
+  variant,
+  isOverlay = false,
+  isDragging = false,
+  dragHandleProps,
+  setNodeRef,
+  style,
+  onView,
+  onEdit,
+  onDelete,
+}: TaskCardContentProps) {
   const [copied, setCopied] = useState(false);
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -33,41 +92,30 @@ export function TaskCard({
     };
   }, []);
 
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
-    id: task.id,
-    disabled: !isAdmin || isOverlay,
-  });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
+  const subtitle =
+    variant === "archived" && task.completedAt != null
+      ? `Completed · ${formatTaskDateTime(toDate(task.completedAt))}`
+      : `Created · ${formatTaskDateTime(toDate(task.createdAt))}`;
 
   return (
     <article
       ref={setNodeRef}
       style={style}
       className={cn(
-        "rounded-lg border border-border bg-card p-3 shadow-xs",
+        "rounded-lg border border-border p-3 shadow-xs",
+        variant === "archived" ? "bg-muted/30" : "bg-card",
         isDragging && "opacity-40",
         isOverlay && "shadow-md ring-1 ring-ring/20",
       )}
     >
       <div className="flex items-start gap-2">
-        {isAdmin ? (
+        {isAdmin && dragHandleProps ? (
           <button
             type="button"
             className="-m-2 mt-0.5 flex min-h-11 min-w-11 touch-none cursor-grab items-center justify-center text-muted-foreground hover:text-foreground active:cursor-grabbing"
             aria-label="Drag task"
-            {...attributes}
-            {...listeners}
+            {...dragHandleProps.attributes}
+            {...dragHandleProps.listeners}
           >
             <GripVertical className="size-4" />
           </button>
@@ -83,9 +131,7 @@ export function TaskCard({
           )}
         >
           <p className="text-sm font-medium leading-snug">{task.text}</p>
-          <p className="text-xs text-muted-foreground">
-            Created · {formatTaskDateTime(toDate(task.createdAt))}
-          </p>
+          <p className="text-xs text-muted-foreground">{subtitle}</p>
         </button>
 
         <div className="flex shrink-0 items-center gap-0.5">
@@ -155,5 +201,82 @@ export function TaskCard({
         </div>
       </div>
     </article>
+  );
+}
+
+function BoardTaskCard({
+  task,
+  isAdmin,
+  isOverlay = false,
+  onView,
+  onEdit,
+  onDelete,
+}: Omit<TaskCardProps, "variant">) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: task.id,
+    disabled: !isAdmin || isOverlay,
+  });
+
+  return (
+    <TaskCardContent
+      task={task}
+      isAdmin={isAdmin}
+      variant="board"
+      isOverlay={isOverlay}
+      isDragging={isDragging}
+      setNodeRef={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+      }}
+      dragHandleProps={
+        isAdmin ? { attributes, listeners } : undefined
+      }
+      onView={onView}
+      onEdit={onEdit}
+      onDelete={onDelete}
+    />
+  );
+}
+
+function ArchivedTaskCard({
+  task,
+  isAdmin,
+  isOverlay = false,
+  onView,
+  onEdit,
+  onDelete,
+}: Omit<TaskCardProps, "variant">) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useDraggable({
+      id: task.id,
+      disabled: !isAdmin || isOverlay,
+    });
+
+  return (
+    <TaskCardContent
+      task={task}
+      isAdmin={isAdmin}
+      variant="archived"
+      isOverlay={isOverlay}
+      isDragging={isDragging}
+      setNodeRef={setNodeRef}
+      style={{
+        transform: CSS.Translate.toString(transform),
+      }}
+      dragHandleProps={
+        isAdmin ? { attributes, listeners } : undefined
+      }
+      onView={onView}
+      onEdit={onEdit}
+      onDelete={onDelete}
+    />
   );
 }

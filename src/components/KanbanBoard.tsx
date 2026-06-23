@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, Copy } from "lucide-react";
+import { Check, ChevronDown, Copy } from "lucide-react";
 import {
   DndContext,
   DragOverlay,
@@ -23,6 +23,11 @@ import { TaskCard } from "@/components/TaskCard";
 import { TaskDetailDialog } from "@/components/TaskDetailDialog";
 import { TaskFormDialog } from "@/components/TaskFormDialog";
 import { Button } from "@/components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { useIsAdmin } from "@/lib/admin";
 import { useDndSensors } from "@/lib/dnd-sensors";
 import { db } from "@/lib/db";
@@ -32,33 +37,30 @@ import {
   TASK_STATUS_LABELS,
   buildColumnPersistTxs,
   formatTasksForColumnCopy,
+  getStatusUpdates,
+  splitTasksForBoard,
   type ColumnTasks,
   type TaskStatus,
 } from "@/lib/tasks";
+import { cn } from "@/lib/utils";
 
 type KanbanBoardProps = {
   site: SiteWithTasks;
 };
 
-function groupTasksByStatus(tasks: Task[]): ColumnTasks {
-  const grouped: ColumnTasks = {
-    todo: [],
-    doing: [],
-    done: [],
-  };
+type TaskLocation =
+  | { kind: "column"; status: TaskStatus }
+  | { kind: "archive" };
 
-  for (const task of tasks) {
-    const status = task.status as TaskStatus;
-    if (TASK_STATUSES.includes(status)) {
-      grouped[status].push(task);
-    }
-  }
+function useBoardNow(intervalMs = 60_000) {
+  const [now, setNow] = useState(() => Date.now());
 
-  for (const status of TASK_STATUSES) {
-    grouped[status].sort((a, b) => a.order - b.order);
-  }
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), intervalMs);
+    return () => clearInterval(id);
+  }, [intervalMs]);
 
-  return grouped;
+  return now;
 }
 
 function getContainerId(status: TaskStatus) {
@@ -87,6 +89,21 @@ function findTaskContainer(
     if (columns[status].some((task) => task.id === taskId)) {
       return status;
     }
+  }
+  return null;
+}
+
+function findTaskLocation(
+  taskId: string,
+  columns: ColumnTasks,
+  archived: Task[],
+): TaskLocation | null {
+  const columnStatus = findTaskContainer(taskId, columns);
+  if (columnStatus) {
+    return { kind: "column", status: columnStatus };
+  }
+  if (archived.some((task) => task.id === taskId)) {
+    return { kind: "archive" };
   }
   return null;
 }
@@ -206,23 +223,111 @@ function KanbanColumn({
   );
 }
 
+function ArchivedTasksSection({
+  tasks,
+  isAdmin,
+  onEditTask,
+  onViewTask,
+  onDeleteTask,
+}: {
+  tasks: Task[];
+  isAdmin: boolean;
+  onEditTask: (task: Task) => void;
+  onViewTask: (task: Task) => void;
+  onDeleteTask: (taskId: string) => void;
+}) {
+  const [open, setOpen] = useState(tasks.length > 0);
+
+  useEffect(() => {
+    if (tasks.length > 0) {
+      setOpen(true);
+    }
+  }, [tasks.length]);
+
+  if (tasks.length === 0) {
+    return null;
+  }
+
+  return (
+    <Collapsible
+      open={open}
+      onOpenChange={setOpen}
+      className="mt-6 border-t border-border pt-6"
+    >
+      <CollapsibleTrigger asChild>
+        <button
+          type="button"
+          className="flex w-full items-center justify-between gap-3 rounded-lg px-1 py-2 text-left hover:bg-muted/40"
+        >
+          <div className="min-w-0">
+            <h3 className="text-sm font-semibold">Archive</h3>
+            <p className="text-xs text-muted-foreground">
+              {tasks.length} {tasks.length === 1 ? "task" : "tasks"} completed
+              more than 24 hours ago
+            </p>
+          </div>
+          <ChevronDown
+            className={cn(
+              "size-4 shrink-0 text-muted-foreground transition-transform",
+              open && "rotate-180",
+            )}
+          />
+        </button>
+      </CollapsibleTrigger>
+
+      <CollapsibleContent>
+        <div className="mt-3 flex flex-col gap-2">
+          {tasks.map((task) => (
+            <TaskCard
+              key={task.id}
+              task={task}
+              variant="archived"
+              isAdmin={isAdmin}
+              onView={() => onViewTask(task)}
+              onEdit={() => onEditTask(task)}
+              onDelete={() => onDeleteTask(task.id)}
+            />
+          ))}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
+
 export function KanbanBoard({ site }: KanbanBoardProps) {
   const { isLoading: authLoading, isAdmin } = useIsAdmin();
+  const now = useBoardNow();
   const [columns, setColumns] = useState<ColumnTasks | null>(null);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
-  const [originStatus, setOriginStatus] = useState<TaskStatus | null>(null);
+  const [activeVariant, setActiveVariant] = useState<"board" | "archived">(
+    "board",
+  );
+  const [originLocation, setOriginLocation] = useState<TaskLocation | null>(
+    null,
+  );
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [viewingTask, setViewingTask] = useState<Task | null>(null);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
 
-  const grouped = useMemo(
-    () => groupTasksByStatus((site.tasks ?? []) as Task[]),
-    [site.tasks],
+  const boardTasks = useMemo(
+    () => splitTasksForBoard((site.tasks ?? []) as Task[], now),
+    [site.tasks, now],
   );
+
+  const grouped = boardTasks.columns;
+  const archivedTasks = boardTasks.archived;
 
   const displayColumns = columns ?? grouped;
 
   const sensors = useDndSensors();
+
+  const resolveTask = (taskId: string) =>
+    (site.tasks as Task[]).find((item) => item.id === taskId);
+
+  const handleDeleteById = (taskId: string) => {
+    const task = resolveTask(taskId);
+    if (task) setTaskToDelete(task);
+  };
 
   if (authLoading) {
     return <PageLoader />;
@@ -232,15 +337,20 @@ export function KanbanBoard({ site }: KanbanBoardProps) {
     if (!isAdmin) return;
 
     const activeId = String(event.active.id);
-    const task = (site.tasks as Task[]).find((item) => item.id === activeId);
+    const task = resolveTask(activeId);
     if (!task) return;
 
+    const location = findTaskLocation(activeId, grouped, archivedTasks);
+    if (!location) return;
+
     setActiveTask(task);
-    setOriginStatus(findTaskContainer(activeId, grouped));
+    setActiveVariant(location.kind === "archive" ? "archived" : "board");
+    setOriginLocation(location);
   };
 
   const handleDragOver = (event: DragOverEvent) => {
     if (!isAdmin) return;
+    if (originLocation?.kind === "archive") return;
 
     const { active, over } = event;
     if (!over) return;
@@ -296,19 +406,19 @@ export function KanbanBoard({ site }: KanbanBoardProps) {
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
+    const fromLocation = originLocation;
     setActiveTask(null);
+    setActiveVariant("board");
+    setOriginLocation(null);
 
     if (!isAdmin) {
-      setOriginStatus(null);
       setColumns(null);
       return;
     }
 
     const { active, over } = event;
-    const fromStatus = originStatus;
-    setOriginStatus(null);
 
-    if (!over || !fromStatus) {
+    if (!over || !fromLocation) {
       setColumns(null);
       return;
     }
@@ -316,6 +426,26 @@ export function KanbanBoard({ site }: KanbanBoardProps) {
     const activeId = String(active.id);
     const overId = String(over.id);
 
+    if (fromLocation.kind === "archive") {
+      const overContainer = resolveOverContainer(overId, grouped);
+      if (!overContainer || overContainer === "done") {
+        setColumns(null);
+        return;
+      }
+
+      const nowMs = Date.now();
+      const targetOrder = grouped[overContainer].length;
+      void db.transact(
+        db.tx.tasks[activeId].update({
+          ...getStatusUpdates("done", overContainer, nowMs),
+          order: targetOrder,
+        }),
+      );
+      setColumns(null);
+      return;
+    }
+
+    const fromStatus = fromLocation.status;
     let finalColumns = columns ?? grouped;
 
     if (!columns) {
@@ -387,7 +517,8 @@ export function KanbanBoard({ site }: KanbanBoardProps) {
 
   const handleDragCancel = () => {
     setActiveTask(null);
-    setOriginStatus(null);
+    setActiveVariant("board");
+    setOriginLocation(null);
     setColumns(null);
   };
 
@@ -416,15 +547,18 @@ export function KanbanBoard({ site }: KanbanBoardProps) {
               isAdmin={isAdmin}
               onEditTask={setEditingTask}
               onViewTask={setViewingTask}
-              onDeleteTask={(taskId) => {
-                const task = (site.tasks as Task[]).find(
-                  (item) => item.id === taskId,
-                );
-                if (task) setTaskToDelete(task);
-              }}
+              onDeleteTask={handleDeleteById}
             />
           ))}
         </div>
+
+        <ArchivedTasksSection
+          tasks={archivedTasks}
+          isAdmin={isAdmin}
+          onEditTask={setEditingTask}
+          onViewTask={setViewingTask}
+          onDeleteTask={handleDeleteById}
+        />
 
         {!isAdmin ? (
           <p className="mt-4 text-center text-sm text-muted-foreground">
@@ -434,7 +568,12 @@ export function KanbanBoard({ site }: KanbanBoardProps) {
 
         <DragOverlay>
           {activeTask ? (
-            <TaskCard task={activeTask} isAdmin={isAdmin} isOverlay />
+            <TaskCard
+              task={activeTask}
+              variant={activeVariant}
+              isAdmin={isAdmin}
+              isOverlay
+            />
           ) : null}
         </DragOverlay>
       </DndContext>

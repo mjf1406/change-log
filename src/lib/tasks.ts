@@ -13,6 +13,60 @@ export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
 
 export type ColumnTasks = Record<TaskStatus, Task[]>;
 
+export const DONE_BOARD_RETENTION_MS = 24 * 60 * 60 * 1000;
+
+export type BoardTasks = {
+  columns: ColumnTasks;
+  archived: Task[];
+};
+
+export function isTaskArchived(
+  task: Pick<Task, "status" | "completedAt">,
+  now = Date.now(),
+): boolean {
+  return (
+    task.status === "done" &&
+    task.completedAt != null &&
+    now - task.completedAt >= DONE_BOARD_RETENTION_MS
+  );
+}
+
+export function isTaskOnDoneBoard(
+  task: Pick<Task, "status" | "completedAt">,
+  now = Date.now(),
+): boolean {
+  return task.status === "done" && !isTaskArchived(task, now);
+}
+
+export function splitTasksForBoard(tasks: Task[], now = Date.now()): BoardTasks {
+  const columns: ColumnTasks = {
+    todo: [],
+    doing: [],
+    done: [],
+  };
+  const archived: Task[] = [];
+
+  for (const task of tasks) {
+    const status = task.status as TaskStatus;
+    if (status === "todo" || status === "doing") {
+      columns[status].push(task);
+    } else if (status === "done") {
+      if (isTaskArchived(task, now)) {
+        archived.push(task);
+      } else {
+        columns.done.push(task);
+      }
+    }
+  }
+
+  columns.todo.sort((a, b) => a.order - b.order);
+  columns.doing.sort((a, b) => a.order - b.order);
+  columns.done.sort((a, b) => a.order - b.order);
+  archived.sort((a, b) => (b.completedAt ?? 0) - (a.completedAt ?? 0));
+
+  return { columns, archived };
+}
+
 export function getStatusUpdates(
   fromStatus: TaskStatus,
   toStatus: TaskStatus,
