@@ -35,6 +35,7 @@ import type { SiteWithTasks, Task } from "@/lib/sites";
 import {
   TASK_STATUSES,
   TASK_STATUS_LABELS,
+  MAIN_BOARD_STATUSES,
   buildColumnPersistTxs,
   formatTasksForColumnCopy,
   getStatusUpdates,
@@ -198,6 +199,16 @@ function KanbanColumn({
       {status === "todo" && isAdmin ? (
         <div className="px-3 pt-3">
           <QuickAddTask siteId={siteId} nextOrder={tasks.length} />
+        </div>
+      ) : null}
+
+      {status === "dreams" && isAdmin ? (
+        <div className="px-3 pt-3">
+          <QuickAddTask
+            siteId={siteId}
+            nextOrder={tasks.length}
+            status="dreams"
+          />
         </div>
       ) : null}
 
@@ -461,11 +472,9 @@ export function KanbanBoard({ site }: KanbanBoardProps) {
         return;
       }
 
-      finalColumns = {
-        todo: [...grouped.todo],
-        doing: [...grouped.doing],
-        done: [...grouped.done],
-      };
+      finalColumns = Object.fromEntries(
+        TASK_STATUSES.map((status) => [status, [...grouped[status]]]),
+      ) as ColumnTasks;
 
       if (activeContainer === overContainer) {
         const items = [...finalColumns[activeContainer]];
@@ -538,7 +547,7 @@ export function KanbanBoard({ site }: KanbanBoardProps) {
         onDragCancel={handleDragCancel}
       >
         <div className="grid gap-4 lg:grid-cols-3">
-          {TASK_STATUSES.map((status) => (
+          {MAIN_BOARD_STATUSES.map((status) => (
             <KanbanColumn
               key={status}
               status={status}
@@ -550,6 +559,18 @@ export function KanbanBoard({ site }: KanbanBoardProps) {
               onDeleteTask={handleDeleteById}
             />
           ))}
+        </div>
+
+        <div className="mt-4">
+          <KanbanColumn
+            status="dreams"
+            tasks={displayColumns.dreams}
+            siteId={site.id}
+            isAdmin={isAdmin}
+            onEditTask={setEditingTask}
+            onViewTask={setViewingTask}
+            onDeleteTask={handleDeleteById}
+          />
         </div>
 
         <ArchivedTasksSection

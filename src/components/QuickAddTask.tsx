@@ -2,13 +2,19 @@ import { useEffect, useRef, useState } from "react";
 import { id } from "@instantdb/react";
 import { Input } from "@/components/ui/input";
 import { db } from "@/lib/db";
+import type { TaskStatus } from "@/lib/tasks";
 
 type QuickAddTaskProps = {
   siteId: string;
   nextOrder: number;
+  status?: TaskStatus;
 };
 
-export function QuickAddTask({ siteId, nextOrder }: QuickAddTaskProps) {
+export function QuickAddTask({
+  siteId,
+  nextOrder,
+  status = "todo",
+}: QuickAddTaskProps) {
   const [value, setValue] = useState("");
   const orderRef = useRef(nextOrder);
 
@@ -28,7 +34,7 @@ export function QuickAddTask({ siteId, nextOrder }: QuickAddTaskProps) {
       db.tx.tasks[taskId]
         .update({
           text,
-          status: "todo",
+          status,
           order,
           createdAt: Date.now(),
         })
@@ -48,9 +54,9 @@ export function QuickAddTask({ siteId, nextOrder }: QuickAddTaskProps) {
           setValue("");
         }
       }}
-      placeholder="Add a task…"
+      placeholder={status === "dreams" ? "Add a dream…" : "Add a task…"}
       className="border-border bg-card shadow-xs"
-      aria-label="Quick add task"
+      aria-label={status === "dreams" ? "Quick add dream" : "Quick add task"}
     />
   );
 }

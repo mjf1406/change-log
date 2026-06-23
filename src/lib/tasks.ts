@@ -1,14 +1,19 @@
 import type { Task } from "@/lib/sites";
 import { db } from "@/lib/db";
 
-export const TASK_STATUSES = ["todo", "doing", "done"] as const;
+export const TASK_STATUSES = ["todo", "doing", "done", "dreams"] as const;
 
 export type TaskStatus = (typeof TASK_STATUSES)[number];
+
+export const MAIN_BOARD_STATUSES = ["todo", "doing", "done"] as const;
+
+export type MainBoardStatus = (typeof MAIN_BOARD_STATUSES)[number];
 
 export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
   todo: "Todo",
   doing: "Doing",
   done: "Done",
+  dreams: "Dreams",
 };
 
 export type ColumnTasks = Record<TaskStatus, Task[]>;
@@ -43,12 +48,13 @@ export function splitTasksForBoard(tasks: Task[], now = Date.now()): BoardTasks 
     todo: [],
     doing: [],
     done: [],
+    dreams: [],
   };
   const archived: Task[] = [];
 
   for (const task of tasks) {
     const status = task.status as TaskStatus;
-    if (status === "todo" || status === "doing") {
+    if (status === "todo" || status === "doing" || status === "dreams") {
       columns[status].push(task);
     } else if (status === "done") {
       if (isTaskArchived(task, now)) {
@@ -62,6 +68,7 @@ export function splitTasksForBoard(tasks: Task[], now = Date.now()): BoardTasks 
   columns.todo.sort((a, b) => a.order - b.order);
   columns.doing.sort((a, b) => a.order - b.order);
   columns.done.sort((a, b) => a.order - b.order);
+  columns.dreams.sort((a, b) => a.order - b.order);
   archived.sort((a, b) => (b.completedAt ?? 0) - (a.completedAt ?? 0));
 
   return { columns, archived };
@@ -86,7 +93,10 @@ export function getStatusUpdates(
     completedAt: number | null;
   }> = { status: toStatus };
 
-  if (toStatus === "doing" && fromStatus === "todo") {
+  if (
+    toStatus === "doing" &&
+    (fromStatus === "todo" || fromStatus === "dreams")
+  ) {
     updates.startedAt = now;
   }
 
@@ -98,7 +108,10 @@ export function getStatusUpdates(
     updates.completedAt = null;
   }
 
-  if (fromStatus === "doing" && toStatus === "todo") {
+  if (
+    fromStatus === "doing" &&
+    (toStatus === "todo" || toStatus === "dreams")
+  ) {
     updates.startedAt = null;
   }
 
