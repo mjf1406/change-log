@@ -88,43 +88,39 @@ function TaskFormDialogContent({
     validators: {
       onSubmit: taskFormSchema,
     },
-    onSubmit: async ({ value }: { value: TaskFormValues }) => {
+    onSubmit: ({ value }: { value: TaskFormValues }) => {
       setSubmitError(null);
 
-      try {
-        const description = normalizeTaskDescription(value.description);
+      const description = normalizeTaskDescription(value.description);
 
-        if (mode === "create") {
-          if (!siteId) {
-            setSubmitError("Site is required to create a task.");
-            return;
-          }
-
-          const taskId = id();
-          await db.transact(
-            db.tx.tasks[taskId]
-              .update({
-                text: value.text.trim(),
-                ...(description ? { description } : {}),
-                status: "todo",
-                order: nextOrder,
-                createdAt: Date.now(),
-              })
-              .link({ site: siteId }),
-          );
-        } else if (task) {
-          await db.transact(
-            db.tx.tasks[task.id].update({
-              text: value.text.trim(),
-              description,
-            }),
-          );
+      if (mode === "create") {
+        if (!siteId) {
+          setSubmitError("Site is required to create a task.");
+          return;
         }
 
-        onClose();
-      } catch {
-        setSubmitError("Failed to save task. Please try again.");
+        const taskId = id();
+        void db.transact(
+          db.tx.tasks[taskId]
+            .update({
+              text: value.text.trim(),
+              ...(description ? { description } : {}),
+              status: "todo",
+              order: nextOrder,
+              createdAt: Date.now(),
+            })
+            .link({ site: siteId }),
+        );
+      } else if (task) {
+        void db.transact(
+          db.tx.tasks[task.id].update({
+            text: value.text.trim(),
+            description,
+          }),
+        );
       }
+
+      onClose();
     },
   });
 
@@ -143,11 +139,7 @@ function TaskFormDialogContent({
 
       <form
         onKeyDown={(event) => {
-          if (
-            (event.ctrlKey || event.metaKey) &&
-            event.key === "Enter" &&
-            !form.state.isSubmitting
-          ) {
+          if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
             event.preventDefault();
             void form.handleSubmit();
           }
@@ -211,17 +203,9 @@ function TaskFormDialogContent({
           <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <form.Subscribe selector={(state) => state.isSubmitting}>
-            {(isSubmitting) => (
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting
-                  ? "Saving…"
-                  : mode === "create"
-                    ? "Add task"
-                    : "Save changes"}
-              </Button>
-            )}
-          </form.Subscribe>
+          <Button type="submit">
+            {mode === "create" ? "Add task" : "Save changes"}
+          </Button>
         </DialogFooter>
       </form>
     </DialogContent>
