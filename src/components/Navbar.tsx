@@ -9,6 +9,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { SignInDialog } from "@/components/SignInDialog";
+import { SiteAvatar } from "@/components/SiteAvatar";
 import { SiteFormDialog } from "@/components/SiteFormDialog";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useIsAdmin } from "@/lib/admin";
@@ -57,12 +58,17 @@ function NavLink({
   );
 }
 
+const navIconLinkClass =
+  "rounded-md p-1.5 transition-colors hover:bg-muted";
+
 function SiteNavLinks({
   onNavigate,
   className,
+  variant = "text",
 }: {
   onNavigate?: () => void;
   className?: string;
+  variant?: "text" | "logo";
 }) {
   const { isLoading, sites } = useSites();
   const matchRoute = useMatchRoute();
@@ -79,7 +85,17 @@ function SiteNavLinks({
         const isActive = !!matchRoute({
           to: "/$site",
           params: { site: site.slug },
+          fuzzy: true,
         });
+
+        const linkClass =
+          variant === "logo"
+            ? cn(navIconLinkClass, isActive && navLinkActiveClass, className)
+            : cn(
+                navLinkClass,
+                isActive && navLinkActiveClass,
+                className,
+              );
 
         return (
           <Link
@@ -87,13 +103,18 @@ function SiteNavLinks({
             to="/$site/board"
             params={{ site: site.slug }}
             onClick={onNavigate}
-            className={cn(
-              navLinkClass,
-              isActive && navLinkActiveClass,
-              className,
-            )}
+            className={linkClass}
+            aria-label={variant === "logo" ? site.name : undefined}
           >
-            {site.name}
+            {variant === "logo" ? (
+              <SiteAvatar
+                name={site.name}
+                logoUrl={site.logo?.url}
+                className="size-7"
+              />
+            ) : (
+              site.name
+            )}
           </Link>
         );
       })}
@@ -107,7 +128,7 @@ function DesktopNav() {
       <NavLink to="/" exact>
         Home
       </NavLink>
-      <SiteNavLinks />
+      <SiteNavLinks variant="logo" />
     </nav>
   );
 }
