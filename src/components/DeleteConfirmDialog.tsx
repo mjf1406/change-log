@@ -1,3 +1,4 @@
+import type { ComponentProps } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -8,6 +9,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import type { Button } from "@/components/ui/button";
 
 type DeleteConfirmDialogProps = {
   open: boolean;
@@ -15,6 +17,7 @@ type DeleteConfirmDialogProps = {
   title: string;
   description: string;
   confirmLabel?: string;
+  confirmVariant?: ComponentProps<typeof Button>["variant"];
   onConfirm: () => void | Promise<void>;
 };
 
@@ -24,6 +27,7 @@ export function DeleteConfirmDialog({
   title,
   description,
   confirmLabel = "Delete",
+  confirmVariant = "destructive",
   onConfirm,
 }: DeleteConfirmDialogProps) {
   const handleConfirm = () => {
@@ -41,7 +45,7 @@ export function DeleteConfirmDialog({
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction
-            variant="destructive"
+            variant={confirmVariant}
             onClick={(event) => {
               event.preventDefault();
               handleConfirm();

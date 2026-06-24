@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, ChevronDown, Copy } from "lucide-react";
+import { Check, ChevronDown, Copy, ArrowRightLeft } from "lucide-react";
 import {
   DndContext,
   DragOverlay,
@@ -24,6 +24,13 @@ import { TaskDetailDialog } from "@/components/TaskDetailDialog";
 import { TaskFormDialog } from "@/components/TaskFormDialog";
 import { Button } from "@/components/ui/button";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
@@ -36,11 +43,15 @@ import {
   TASK_STATUSES,
   TASK_STATUS_LABELS,
   MAIN_BOARD_STATUSES,
+  COLUMN_BULK_MOVE_TARGETS,
+  buildBulkColumnMoveTxs,
   buildColumnPersistTxs,
   formatTasksForColumnCopy,
+  getBulkMoveConfirmDescription,
   getStatusUpdates,
   splitTasksForBoard,
   type ColumnTasks,
+  type MainBoardStatus,
   type TaskStatus,
 } from "@/lib/tasks";
 import { cn } from "@/lib/utils";
@@ -121,6 +132,8 @@ function KanbanColumn({
   tasks,
   siteId,
   isAdmin,
+  bulkMoveTargets,
+  onRequestBulkMove,
   onEditTask,
   onViewTask,
   onDeleteTask,
@@ -129,17 +142,25 @@ function KanbanColumn({
   tasks: Task[];
   siteId: string;
   isAdmin: boolean;
+  bulkMoveTargets?: readonly MainBoardStatus[];
+  onRequestBulkMove?: (toStatus: MainBoardStatus) => void;
   onEditTask: (task: Task) => void;
   onViewTask: (task: Task) => void;
   onDeleteTask: (taskId: string) => void;
 }) {
   const { setNodeRef } = useDroppable({ id: getContainerId(status) });
   const [copied, setCopied] = useState(false);
+  const [moveDialogOpen, setMoveDialogOpen] = useState(false);
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const columnCopyText = useMemo(
     () => formatTasksForColumnCopy(tasks),
     [tasks],
   );
+  const canBulkMove =
+    isAdmin &&
+    bulkMoveTargets != null &&
+    bulkMoveTargets.length > 0 &&
+    onRequestBulkMove != null;
 
   useEffect(() => {
     return () => {
@@ -159,42 +180,88 @@ function KanbanColumn({
             {tasks.length} {tasks.length === 1 ? "task" : "tasks"}
           </p>
         </div>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-xs"
-          className="shrink-0"
-          disabled={tasks.length === 0}
-          aria-label={
-            copied
-              ? "Copied column"
-              : `Copy all ${TASK_STATUS_LABELS[status]} tasks`
-          }
-          onClick={() => {
-            void navigator.clipboard
-              .writeText(columnCopyText)
-              .then(() => {
-                setCopied(true);
-                if (copyTimeoutRef.current) {
-                  clearTimeout(copyTimeoutRef.current);
-                }
-                copyTimeoutRef.current = setTimeout(
-                  () => setCopied(false),
-                  1500,
-                );
-              })
-              .catch((error) => {
-                console.error("Failed to copy column tasks", error);
-              });
-          }}
-        >
-          {copied ? (
-            <Check className="size-3.5" />
-          ) : (
-            <Copy className="size-3.5" />
-          )}
-        </Button>
+        <div className="flex shrink-0 items-center gap-0.5">
+          {canBulkMove ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              disabled={tasks.length === 0}
+              aria-label={`Move all ${TASK_STATUS_LABELS[status]} tasks`}
+              onClick={() => setMoveDialogOpen(true)}
+            >
+              <ArrowRightLeft className="size-3.5" />
+            </Button>
+          ) : null}
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-xs"
+            className="shrink-0"
+            disabled={tasks.length === 0}
+            aria-label={
+              copied
+                ? "Copied column"
+                : `Copy all ${TASK_STATUS_LABELS[status]} tasks`
+            }
+            onClick={() => {
+              void navigator.clipboard
+                .writeText(columnCopyText)
+                .then(() => {
+                  setCopied(true);
+                  if (copyTimeoutRef.current) {
+                    clearTimeout(copyTimeoutRef.current);
+                  }
+                  copyTimeoutRef.current = setTimeout(
+                    () => setCopied(false),
+                    1500,
+                  );
+                })
+                .catch((error) => {
+                  console.error("Failed to copy column tasks", error);
+                });
+            }}
+          >
+            {copied ? (
+              <Check className="size-3.5" />
+            ) : (
+              <Copy className="size-3.5" />
+            )}
+          </Button>
+        </div>
       </header>
+
+      {canBulkMove ? (
+        <Dialog open={moveDialogOpen} onOpenChange={setMoveDialogOpen}>
+          <DialogContent showCloseButton>
+            <DialogHeader>
+              <DialogTitle>
+                Move all {TASK_STATUS_LABELS[status]} tasks
+              </DialogTitle>
+              <DialogDescription>
+                Choose a destination column for all {tasks.length}{" "}
+                {tasks.length === 1 ? "task" : "tasks"}.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col gap-2">
+              {bulkMoveTargets.map((target) => (
+                <Button
+                  key={target}
+                  type="button"
+                  variant="outline"
+                  className="justify-start"
+                  onClick={() => {
+                    setMoveDialogOpen(false);
+                    onRequestBulkMove(target);
+                  }}
+                >
+                  Move to {TASK_STATUS_LABELS[target]}
+                </Button>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
+      ) : null}
 
       {status === "todo" && isAdmin ? (
         <div className="px-3 pt-3">
@@ -320,6 +387,10 @@ export function KanbanBoard({ site }: KanbanBoardProps) {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [viewingTask, setViewingTask] = useState<Task | null>(null);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
+  const [bulkMove, setBulkMove] = useState<{
+    fromStatus: MainBoardStatus;
+    toStatus: MainBoardStatus;
+  } | null>(null);
 
   const boardTasks = useMemo(
     () => splitTasksForBoard((site.tasks ?? []) as Task[], now),
@@ -537,6 +608,31 @@ export function KanbanBoard({ site }: KanbanBoardProps) {
     void db.transact(db.tx.tasks[taskToDelete.id].delete());
   };
 
+  const handleRequestBulkMove = (
+    fromStatus: MainBoardStatus,
+    toStatus: MainBoardStatus,
+  ) => {
+    setBulkMove({ fromStatus, toStatus });
+  };
+
+  const handleConfirmBulkMove = () => {
+    if (!bulkMove || !isAdmin) return;
+
+    const sourceTasks = displayColumns[bulkMove.fromStatus];
+    const destTasks = displayColumns[bulkMove.toStatus];
+    const txs = buildBulkColumnMoveTxs(
+      sourceTasks,
+      destTasks,
+      bulkMove.fromStatus,
+      bulkMove.toStatus,
+      Date.now(),
+    );
+
+    if (txs.length > 0) {
+      void db.transact(txs);
+    }
+  };
+
   return (
     <>
       <DndContext
@@ -555,6 +651,10 @@ export function KanbanBoard({ site }: KanbanBoardProps) {
               tasks={displayColumns[status]}
               siteId={site.id}
               isAdmin={isAdmin}
+              bulkMoveTargets={COLUMN_BULK_MOVE_TARGETS[status]}
+              onRequestBulkMove={(toStatus) =>
+                handleRequestBulkMove(status, toStatus)
+              }
               onEditTask={setEditingTask}
               onViewTask={setViewingTask}
               onDeleteTask={handleDeleteById}
@@ -629,6 +729,26 @@ export function KanbanBoard({ site }: KanbanBoardProps) {
             : ""
         }
         onConfirm={handleDeleteTask}
+      />
+
+      <DeleteConfirmDialog
+        open={bulkMove !== null}
+        onOpenChange={(open) => {
+          if (!open) setBulkMove(null);
+        }}
+        title="Move all tasks?"
+        description={
+          bulkMove
+            ? getBulkMoveConfirmDescription(
+                bulkMove.fromStatus,
+                bulkMove.toStatus,
+                displayColumns[bulkMove.fromStatus].length,
+              )
+            : ""
+        }
+        confirmLabel="Move all"
+        confirmVariant="default"
+        onConfirm={handleConfirmBulkMove}
       />
     </>
   );

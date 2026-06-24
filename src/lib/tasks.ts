@@ -9,6 +9,15 @@ export const MAIN_BOARD_STATUSES = ["todo", "doing", "done"] as const;
 
 export type MainBoardStatus = (typeof MAIN_BOARD_STATUSES)[number];
 
+export const COLUMN_BULK_MOVE_TARGETS: Record<
+  MainBoardStatus,
+  MainBoardStatus[]
+> = {
+  todo: ["doing", "done"],
+  doing: ["todo", "done"],
+  done: ["todo", "doing"],
+};
+
 export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
   todo: "Todo",
   doing: "Doing",
@@ -147,6 +156,39 @@ export function buildColumnPersistTxs(
   return txs;
 }
 
+export function buildBulkColumnMoveTxs(
+  sourceTasks: Task[],
+  destTasks: Task[],
+  fromStatus: TaskStatus,
+  toStatus: TaskStatus,
+  now: number,
+) {
+  const sorted = [...sourceTasks].sort((a, b) => a.order - b.order);
+  const baseOrder = destTasks.length;
+
+  return sorted.map((task, index) =>
+    db.tx.tasks[task.id].update({
+      ...getStatusUpdates(fromStatus, toStatus, now),
+      order: baseOrder + index,
+    }),
+  );
+}
+
+export function getBulkMoveConfirmDescription(
+  fromStatus: MainBoardStatus,
+  toStatus: MainBoardStatus,
+  count: number,
+): string {
+  const noun = count === 1 ? "task" : "tasks";
+  const from = TASK_STATUS_LABELS[fromStatus];
+  const to = TASK_STATUS_LABELS[toStatus];
+  let message = `Move all ${count} ${from} ${noun} to ${to}?`;
+  if (toStatus === "done") {
+    message += " This will mark them completed now.";
+  }
+  return message;
+}
+
 export function toDate(value: number | Date): Date {
   return typeof value === "number" ? new Date(value) : value;
 }
@@ -260,7 +302,10 @@ export function daysToComplete(createdAt: Date, completedAt: Date): string {
 }
 
 export function formatDayKey(date: Date): string {
-  return date.toISOString().slice(0, 10);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 export function formatDayLabel(date: Date): string {
