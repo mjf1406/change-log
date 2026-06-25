@@ -5,6 +5,8 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { getChecklistProgress, hasChecklist } from "@/lib/checklist";
 import type { Task } from "@/lib/sites";
 import { formatTaskDateTime, formatTaskForCopy, toDate } from "@/lib/tasks";
 import { cn } from "@/lib/utils";
@@ -102,6 +104,9 @@ function TaskCardContent({
     variant === "archived" && task.completedAt != null
       ? `Completed · ${formatTaskDateTime(toDate(task.completedAt))}`
       : `Created · ${formatTaskDateTime(toDate(task.createdAt))}`;
+  const checklistProgress = hasChecklist(task.description)
+    ? getChecklistProgress(task.description)
+    : null;
 
   return (
     <article
@@ -146,6 +151,15 @@ function TaskCardContent({
             {task.text}
           </p>
           <p className="text-xs text-muted-foreground">{subtitle}</p>
+          {checklistProgress ? (
+            <div className="space-y-1 pt-1">
+              <Progress value={checklistProgress.percent} />
+              <p className="text-[11px] text-muted-foreground">
+                {checklistProgress.checked}/{checklistProgress.total} ·{" "}
+                {checklistProgress.percent}%
+              </p>
+            </div>
+          ) : null}
         </button>
 
         <div className="flex shrink-0 items-center gap-0.5">

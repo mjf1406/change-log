@@ -19,6 +19,10 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  applyDescriptionShortcut,
+  getDescriptionShortcut,
+} from "@/lib/description-editor";
 import { db } from "@/lib/db";
 import type { Task } from "@/lib/sites";
 import {
@@ -125,7 +129,7 @@ function TaskFormDialogContent({
   });
 
   return (
-    <DialogContent className="sm:max-w-md">
+    <DialogContent className="sm:max-w-lg">
       <DialogHeader>
         <DialogTitle>
           {mode === "create" ? "Add task" : "Edit task"}
@@ -185,9 +189,32 @@ function TaskFormDialogContent({
                     value={field.state.value}
                     onBlur={field.handleBlur}
                     onChange={(event) => field.handleChange(event.target.value)}
-                    placeholder="Add more details about this task"
-                    rows={4}
+                    onKeyDown={(event) => {
+                      const shortcut = getDescriptionShortcut(event);
+                      if (!shortcut) return;
+
+                      event.preventDefault();
+                      const textarea = event.currentTarget;
+                      const result = applyDescriptionShortcut(
+                        field.state.value,
+                        textarea.selectionStart,
+                        textarea.selectionEnd,
+                        shortcut,
+                      );
+
+                      field.handleChange(result.value);
+
+                      requestAnimationFrame(() => {
+                        textarea.selectionStart = result.selectionStart;
+                        textarea.selectionEnd = result.selectionEnd;
+                      });
+                    }}
+                    placeholder="Add details or paste a markdown checklist (- [ ] item)"
+                    rows={8}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Mod+Shift+C checklist · Mod+Shift+B bullet · Mod+[/] indent
+                  </p>
                   <FieldError errors={field.state.meta.errors} />
                 </FieldContent>
               </Field>

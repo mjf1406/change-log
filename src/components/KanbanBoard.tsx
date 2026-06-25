@@ -385,7 +385,7 @@ export function KanbanBoard({ site }: KanbanBoardProps) {
     null,
   );
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [viewingTask, setViewingTask] = useState<Task | null>(null);
+  const [viewingTaskId, setViewingTaskId] = useState<string | null>(null);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
   const [bulkMove, setBulkMove] = useState<{
     fromStatus: MainBoardStatus;
@@ -406,6 +406,10 @@ export function KanbanBoard({ site }: KanbanBoardProps) {
 
   const resolveTask = (taskId: string) =>
     (site.tasks as Task[]).find((item) => item.id === taskId);
+
+  const viewingTask = viewingTaskId
+    ? (resolveTask(viewingTaskId) ?? null)
+    : null;
 
   const handleDeleteById = (taskId: string) => {
     const task = resolveTask(taskId);
@@ -656,7 +660,7 @@ export function KanbanBoard({ site }: KanbanBoardProps) {
                 handleRequestBulkMove(status, toStatus)
               }
               onEditTask={setEditingTask}
-              onViewTask={setViewingTask}
+              onViewTask={(task) => setViewingTaskId(task.id)}
               onDeleteTask={handleDeleteById}
             />
           ))}
@@ -669,7 +673,7 @@ export function KanbanBoard({ site }: KanbanBoardProps) {
             siteId={site.id}
             isAdmin={isAdmin}
             onEditTask={setEditingTask}
-            onViewTask={setViewingTask}
+            onViewTask={(task) => setViewingTaskId(task.id)}
             onDeleteTask={handleDeleteById}
           />
         </div>
@@ -678,7 +682,7 @@ export function KanbanBoard({ site }: KanbanBoardProps) {
           tasks={archivedTasks}
           isAdmin={isAdmin}
           onEditTask={setEditingTask}
-          onViewTask={setViewingTask}
+          onViewTask={(task) => setViewingTaskId(task.id)}
           onDeleteTask={handleDeleteById}
         />
 
@@ -710,9 +714,9 @@ export function KanbanBoard({ site }: KanbanBoardProps) {
       />
 
       <TaskDetailDialog
-        open={viewingTask !== null}
+        open={viewingTaskId !== null}
         onOpenChange={(open) => {
-          if (!open) setViewingTask(null);
+          if (!open) setViewingTaskId(null);
         }}
         task={viewingTask}
       />
