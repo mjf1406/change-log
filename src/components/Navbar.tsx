@@ -1,12 +1,17 @@
+/** @format */
+
 import { useState, type ReactNode } from "react";
 import { Link, useMatchRoute } from "@tanstack/react-router";
-import { ClipboardList, LogIn, LogOut, Menu, Plus, Settings2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+    ClipboardList,
+    LogIn,
+    LogOut,
+    Menu,
+    Plus,
+    Settings2,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { SignInDialog } from "@/components/SignInDialog";
 import { SiteAvatar } from "@/components/SiteAvatar";
 import { SiteFormDialog } from "@/components/SiteFormDialog";
@@ -17,263 +22,294 @@ import { useSites } from "@/lib/sites";
 import { cn } from "@/lib/utils";
 
 const navLinkClass =
-  "rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground";
+    "rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground";
 
 const navLinkActiveClass = "bg-muted text-foreground";
 
 function NavLink({
-  to,
-  params,
-  search,
-  children,
-  exact = false,
-  includeSearch = true,
-  onNavigate,
-  className,
+    to,
+    params,
+    search,
+    children,
+    exact = false,
+    includeSearch = true,
+    onNavigate,
+    className,
 }: {
-  to: string;
-  params?: Record<string, string>;
-  search?: Record<string, string>;
-  children: ReactNode;
-  exact?: boolean;
-  includeSearch?: boolean;
-  onNavigate?: () => void;
-  className?: string;
+    to: string;
+    params?: Record<string, string>;
+    search?: Record<string, string>;
+    children: ReactNode;
+    exact?: boolean;
+    includeSearch?: boolean;
+    onNavigate?: () => void;
+    className?: string;
 }) {
-  return (
-    <Link
-      to={to}
-      params={params}
-      search={search}
-      activeOptions={{ exact, includeSearch }}
-      onClick={onNavigate}
-      className={cn(navLinkClass, className)}
-      activeProps={{
-        className: cn(navLinkClass, navLinkActiveClass, className),
-      }}
-    >
-      {children}
-    </Link>
-  );
+    return (
+        <Link
+            to={to}
+            params={params}
+            search={search}
+            activeOptions={{ exact, includeSearch }}
+            onClick={onNavigate}
+            className={cn(navLinkClass, className)}
+            activeProps={{
+                className: cn(navLinkClass, navLinkActiveClass, className),
+            }}
+        >
+            {children}
+        </Link>
+    );
 }
 
-const navIconLinkClass =
-  "rounded-md p-1.5 transition-colors hover:bg-muted";
+const navIconLinkClass = "rounded-md p-1.5 transition-colors hover:bg-muted";
 
 function SiteNavLinks({
-  onNavigate,
-  className,
-  variant = "text",
+    onNavigate,
+    className,
+    variant = "text",
 }: {
-  onNavigate?: () => void;
-  className?: string;
-  variant?: "text" | "logo";
+    onNavigate?: () => void;
+    className?: string;
+    variant?: "text" | "logo";
 }) {
-  const { isLoading, sites } = useSites();
-  const matchRoute = useMatchRoute();
+    const { isLoading, sites } = useSites();
+    const matchRoute = useMatchRoute();
 
-  if (isLoading) {
-    return (
-      <span className="px-3 py-2 text-xs text-muted-foreground">Loading...</span>
-    );
-  }
-
-  return (
-    <>
-      {sites.map((site) => {
-        const isActive = !!matchRoute({
-          to: "/$site",
-          params: { site: site.slug },
-          fuzzy: true,
-        });
-
-        const linkClass =
-          variant === "logo"
-            ? cn(navIconLinkClass, isActive && navLinkActiveClass, className)
-            : cn(
-                navLinkClass,
-                isActive && navLinkActiveClass,
-                className,
-              );
-
+    if (isLoading) {
         return (
-          <Link
-            key={site.id}
-            to="/$site/board"
-            params={{ site: site.slug }}
-            onClick={onNavigate}
-            className={linkClass}
-            aria-label={variant === "logo" ? site.name : undefined}
-          >
-            {variant === "logo" ? (
-              <SiteAvatar
-                name={site.name}
-                logoUrl={site.logo?.url}
-                className="size-7"
-              />
-            ) : (
-              site.name
-            )}
-          </Link>
+            <span className="px-3 py-2 text-xs text-muted-foreground">
+                Loading...
+            </span>
         );
-      })}
-    </>
-  );
+    }
+
+    return (
+        <>
+            {sites.map((site) => {
+                const isActive = !!matchRoute({
+                    to: "/$site",
+                    params: { site: site.slug },
+                    fuzzy: true,
+                });
+
+                const linkClass =
+                    variant === "logo"
+                        ? cn(
+                              navIconLinkClass,
+                              isActive && navLinkActiveClass,
+                              className,
+                          )
+                        : cn(
+                              navLinkClass,
+                              isActive && navLinkActiveClass,
+                              className,
+                          );
+
+                return (
+                    <Link
+                        key={site.id}
+                        to="/$site/board"
+                        params={{ site: site.slug }}
+                        onClick={onNavigate}
+                        className={linkClass}
+                        aria-label={variant === "logo" ? site.name : undefined}
+                    >
+                        {variant === "logo" ? (
+                            <SiteAvatar
+                                name={site.name}
+                                logoUrl={site.logo?.url}
+                                className="size-7"
+                            />
+                        ) : (
+                            site.name
+                        )}
+                    </Link>
+                );
+            })}
+        </>
+    );
 }
 
 function DesktopNav() {
-  return (
-    <nav className="hidden items-center gap-1 md:flex" aria-label="Main">
-      <NavLink to="/" exact>
-        Home
-      </NavLink>
-      <SiteNavLinks variant="logo" />
-    </nav>
-  );
+    return (
+        <nav
+            className="hidden items-center gap-1 md:flex"
+            aria-label="Main"
+        >
+            <NavLink
+                to="/"
+                exact
+            >
+                Home
+            </NavLink>
+            <SiteNavLinks variant="logo" />
+        </nav>
+    );
 }
 
 function AuthActions({
-  onSignIn,
-  onCreateSite,
-  className,
+    onSignIn,
+    onCreateSite,
+    className,
 }: {
-  onSignIn: () => void;
-  onCreateSite: () => void;
-  className?: string;
+    onSignIn: () => void;
+    onCreateSite: () => void;
+    className?: string;
 }) {
-  const { isLoading, user } = db.useAuth();
-  const { isAdmin } = useIsAdmin();
+    const { isLoading, user } = db.useAuth();
+    const { isAdmin } = useIsAdmin();
 
-  if (isLoading) {
-    return null;
-  }
+    if (isLoading) {
+        return null;
+    }
 
-  if (!user) {
+    if (!user) {
+        return (
+            <Button
+                variant="default"
+                size="icon-sm"
+                className={className}
+                onClick={onSignIn}
+                aria-label="Sign in"
+            >
+                <LogIn />
+            </Button>
+        );
+    }
+
     return (
-      <Button
-        variant="default"
-        size="icon-sm"
-        className={className}
-        onClick={onSignIn}
-        aria-label="Sign in"
-      >
-        <LogIn />
-      </Button>
+        <div className={cn("flex items-center gap-2", className)}>
+            {isAdmin ? (
+                <>
+                    <Button
+                        variant="outline"
+                        size="icon-sm"
+                        asChild
+                        aria-label="Work order"
+                    >
+                        <Link to="/work-order">
+                            <ClipboardList />
+                        </Link>
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="icon-sm"
+                        asChild
+                        aria-label="Manage sites"
+                    >
+                        <Link to="/sites">
+                            <Settings2 />
+                        </Link>
+                    </Button>
+                    <Button
+                        variant="default"
+                        size="icon-sm"
+                        onClick={onCreateSite}
+                        aria-label="Add site"
+                    >
+                        <Plus />
+                    </Button>
+                </>
+            ) : null}
+            <Button
+                variant="outline"
+                size="icon-sm"
+                onClick={() => db.auth.signOut()}
+                aria-label="Sign out"
+            >
+                <LogOut />
+            </Button>
+        </div>
     );
-  }
-
-  return (
-    <div className={cn("flex items-center gap-2", className)}>
-      {isAdmin ? (
-        <>
-          <Button
-            variant="outline"
-            size="icon-sm"
-            asChild
-            aria-label="Work order"
-          >
-            <Link to="/work-order">
-              <ClipboardList />
-            </Link>
-          </Button>
-          <Button
-            variant="outline"
-            size="icon-sm"
-            asChild
-            aria-label="Manage sites"
-          >
-            <Link to="/sites">
-              <Settings2 />
-            </Link>
-          </Button>
-          <Button
-            variant="default"
-            size="icon-sm"
-            onClick={onCreateSite}
-            aria-label="Add site"
-          >
-            <Plus />
-          </Button>
-        </>
-      ) : null}
-      <Button
-        variant="outline"
-        size="icon-sm"
-        onClick={() => db.auth.signOut()}
-        aria-label="Sign out"
-      >
-        <LogOut />
-      </Button>
-    </div>
-  );
 }
 
 function MobileNav({
-  open,
-  onOpenChange,
+    open,
+    onOpenChange,
 }: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
 }) {
-  const close = () => onOpenChange(false);
+    const close = () => onOpenChange(false);
 
-  return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetTrigger asChild>
-        <Button
-          variant="outline"
-          size="icon-sm"
-          className="md:hidden"
-          aria-label="Open menu"
+    return (
+        <Sheet
+            open={open}
+            onOpenChange={onOpenChange}
         >
-          <Menu />
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="right" className="w-full max-w-xs">
-        <nav className="flex flex-col gap-1 px-4 pt-4" aria-label="Main">
-          <NavLink to="/" exact onNavigate={close} className="w-full">
-            Home
-          </NavLink>
-          <SiteNavLinks onNavigate={close} className="w-full" />
-        </nav>
-      </SheetContent>
-    </Sheet>
-  );
+            <SheetTrigger asChild>
+                <Button
+                    variant="outline"
+                    size="icon-sm"
+                    className="md:hidden"
+                    aria-label="Open menu"
+                >
+                    <Menu />
+                </Button>
+            </SheetTrigger>
+            <SheetContent
+                side="right"
+                className="w-full max-w-xs"
+            >
+                <nav
+                    className="flex flex-col gap-1 px-4 pt-4"
+                    aria-label="Main"
+                >
+                    <NavLink
+                        to="/"
+                        exact
+                        onNavigate={close}
+                        className="w-full"
+                    >
+                        Home
+                    </NavLink>
+                    <SiteNavLinks
+                        onNavigate={close}
+                        className="w-full"
+                    />
+                </nav>
+            </SheetContent>
+        </Sheet>
+    );
 }
 
 export function Navbar() {
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [signInOpen, setSignInOpen] = useState(false);
-  const [createSiteOpen, setCreateSiteOpen] = useState(false);
+    const [mobileOpen, setMobileOpen] = useState(false);
+    const [signInOpen, setSignInOpen] = useState(false);
+    const [createSiteOpen, setCreateSiteOpen] = useState(false);
 
-  return (
-    <>
-      <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80">
-        <div className="mx-auto flex h-14 max-w-5xl items-center gap-3 px-4 sm:px-6">
-          <div className="flex flex-1 items-center justify-end gap-3 md:justify-between">
-            <DesktopNav />
+    return (
+        <>
+            <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80">
+                <div className="mx-auto flex h-14 max-w-5xl items-center gap-3 px-4 sm:px-6">
+                    <div className="flex flex-1 items-center justify-end gap-3 md:justify-between">
+                        <DesktopNav />
 
-            <div className="flex min-w-0 items-center gap-1 md:gap-2">
-              <AuthActions
-                onSignIn={() => setSignInOpen(true)}
-                onCreateSite={() => setCreateSiteOpen(true)}
-              />
-              <ThemeToggle />
-              <MobileNav
-                open={mobileOpen}
-                onOpenChange={setMobileOpen}
-              />
-            </div>
-          </div>
-        </div>
-      </header>
+                        <div className="flex min-w-0 items-center gap-1 md:gap-2">
+                            <AuthActions
+                                onSignIn={() => setSignInOpen(true)}
+                                onCreateSite={() => setCreateSiteOpen(true)}
+                            />
+                            <ThemeToggle />
+                            <MobileNav
+                                open={mobileOpen}
+                                onOpenChange={setMobileOpen}
+                            />
+                        </div>
+                    </div>
+                </div>
+            </header>
 
-      <SignInDialog open={signInOpen} onOpenChange={setSignInOpen} />
-      <SiteFormDialog
-        open={createSiteOpen}
-        onOpenChange={setCreateSiteOpen}
-        mode="create"
-      />
-    </>
-  );
+            <SignInDialog
+                open={signInOpen}
+                onOpenChange={setSignInOpen}
+            />
+            <SiteFormDialog
+                open={createSiteOpen}
+                onOpenChange={setCreateSiteOpen}
+                mode="create"
+            />
+        </>
+    );
 }

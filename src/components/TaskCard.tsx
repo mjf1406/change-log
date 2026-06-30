@@ -113,17 +113,17 @@ function TaskCardContent({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "rounded-lg border border-border p-3 shadow-xs",
+        "min-w-0 w-full overflow-hidden rounded-lg border border-border p-3 shadow-xs",
         variant === "archived" ? "bg-muted/30" : "bg-card",
         isDragging && "opacity-40",
         isOverlay && "shadow-md ring-1 ring-ring/20",
       )}
     >
-      <div className="flex items-start gap-2">
+      <div className="flex min-w-0 items-start gap-2">
         {isAdmin && dragHandleProps ? (
           <button
             type="button"
-            className="-m-2 mt-0.5 flex min-h-11 min-w-11 touch-none cursor-grab items-center justify-center text-muted-foreground hover:text-foreground active:cursor-grabbing"
+            className="mt-0.5 flex min-h-11 min-w-11 shrink-0 touch-none cursor-grab items-center justify-center text-muted-foreground hover:text-foreground active:cursor-grabbing"
             aria-label="Drag task"
             {...dragHandleProps.attributes}
             {...dragHandleProps.listeners}
@@ -143,7 +143,7 @@ function TaskCardContent({
         >
           <p
             className={cn(
-              "text-sm font-medium leading-snug",
+              "text-sm font-medium leading-snug wrap-break-word",
               truncateTitle && "truncate",
             )}
             title={truncateTitle ? task.text : undefined}
