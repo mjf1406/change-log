@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
-  SheetFooter,
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { SignInDialog } from "@/components/SignInDialog";
@@ -212,17 +211,11 @@ function AuthActions({
 function MobileNav({
   open,
   onOpenChange,
-  onSignIn,
-  onCreateSite,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSignIn: () => void;
-  onCreateSite: () => void;
 }) {
   const close = () => onOpenChange(false);
-  const { isLoading, user } = db.useAuth();
-  const { isAdmin } = useIsAdmin();
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -243,72 +236,6 @@ function MobileNav({
           </NavLink>
           <SiteNavLinks onNavigate={close} className="w-full" />
         </nav>
-        <SheetFooter className="border-t border-border">
-          {!isLoading && !user ? (
-            <Button
-              variant="default"
-              size="icon-sm"
-              className="mx-auto"
-              onClick={() => {
-                close();
-                onSignIn();
-              }}
-              aria-label="Sign in"
-            >
-              <LogIn />
-            </Button>
-          ) : null}
-          {!isLoading && user ? (
-            <div className="flex items-center justify-center gap-2">
-              {isAdmin ? (
-                <>
-                  <Button
-                    variant="outline"
-                    size="icon-sm"
-                    asChild
-                    aria-label="Work order"
-                  >
-                    <Link to="/work-order" onClick={close}>
-                      <ClipboardList />
-                    </Link>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon-sm"
-                    asChild
-                    aria-label="Manage sites"
-                  >
-                    <Link to="/sites" onClick={close}>
-                      <Settings2 />
-                    </Link>
-                  </Button>
-                  <Button
-                    variant="default"
-                    size="icon-sm"
-                    onClick={() => {
-                      close();
-                      onCreateSite();
-                    }}
-                    aria-label="Add site"
-                  >
-                    <Plus />
-                  </Button>
-                </>
-              ) : null}
-              <Button
-                variant="outline"
-                size="icon-sm"
-                onClick={() => {
-                  close();
-                  void db.auth.signOut();
-                }}
-                aria-label="Sign out"
-              >
-                <LogOut />
-              </Button>
-            </div>
-          ) : null}
-        </SheetFooter>
       </SheetContent>
     </Sheet>
   );
@@ -326,18 +253,15 @@ export function Navbar() {
           <div className="flex flex-1 items-center justify-end gap-3 md:justify-between">
             <DesktopNav />
 
-            <div className="flex items-center gap-2">
+            <div className="flex min-w-0 items-center gap-1 md:gap-2">
               <AuthActions
                 onSignIn={() => setSignInOpen(true)}
                 onCreateSite={() => setCreateSiteOpen(true)}
-                className="hidden md:flex"
               />
               <ThemeToggle />
               <MobileNav
                 open={mobileOpen}
                 onOpenChange={setMobileOpen}
-                onSignIn={() => setSignInOpen(true)}
-                onCreateSite={() => setCreateSiteOpen(true)}
               />
             </div>
           </div>

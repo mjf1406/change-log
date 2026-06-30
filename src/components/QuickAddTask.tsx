@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { id } from "@instantdb/react";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { db } from "@/lib/db";
 import type { TaskStatus } from "@/lib/tasks";
@@ -43,20 +45,38 @@ export function QuickAddTask({
   };
 
   return (
-    <Input
-      value={value}
-      onChange={(e) => setValue(e.target.value)}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          submit();
-        } else if (e.key === "Escape") {
-          setValue("");
-        }
+    <form
+      className="flex gap-2"
+      onSubmit={(e) => {
+        e.preventDefault();
+        submit();
       }}
-      placeholder={status === "dreams" ? "Add a dream…" : "Add a task…"}
-      className="border-border bg-card shadow-xs"
-      aria-label={status === "dreams" ? "Quick add dream" : "Quick add task"}
-    />
+    >
+      <Input
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            submit();
+          } else if (e.key === "Escape") {
+            setValue("");
+          }
+        }}
+        enterKeyHint="done"
+        placeholder={status === "dreams" ? "Add a dream…" : "Add a task…"}
+        className="min-w-0 flex-1 border-border bg-card shadow-xs"
+        aria-label={status === "dreams" ? "Quick add dream" : "Quick add task"}
+      />
+      <Button
+        type="submit"
+        size="icon-sm"
+        className="shrink-0 md:hidden"
+        disabled={!value.trim()}
+        aria-label={status === "dreams" ? "Add dream" : "Add task"}
+      >
+        <Plus />
+      </Button>
+    </form>
   );
 }
