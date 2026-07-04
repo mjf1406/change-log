@@ -209,7 +209,11 @@ export function formatTaskForCopy(
   const description = task.description?.trim();
   const titleLine = `- ${title}`;
   if (!description) return titleLine;
-  return `${titleLine}\n-- ${description}`;
+
+  const descriptionLines = description.split("\n").map((line) =>
+    line.length === 0 ? "" : `-- ${line}`,
+  );
+  return [titleLine, ...descriptionLines].join("\n");
 }
 
 export function formatTasksForColumnCopy(
