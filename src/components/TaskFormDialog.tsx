@@ -21,7 +21,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   applyDescriptionShortcut,
+  continueChecklistOnEnter,
   getDescriptionShortcut,
+  type TextEditResult,
 } from "@/lib/description-editor";
 import { db } from "@/lib/db";
 import type { Task } from "@/lib/sites";
@@ -190,24 +192,45 @@ function TaskFormDialogContent({
                     onBlur={field.handleBlur}
                     onChange={(event) => field.handleChange(event.target.value)}
                     onKeyDown={(event) => {
+                      const textarea = event.currentTarget;
+                      const applyEdit = (result: TextEditResult) => {
+                        event.preventDefault();
+                        field.handleChange(result.value);
+                        requestAnimationFrame(() => {
+                          textarea.selectionStart = result.selectionStart;
+                          textarea.selectionEnd = result.selectionEnd;
+                        });
+                      };
+
+                      if (
+                        event.key === "Enter" &&
+                        !event.ctrlKey &&
+                        !event.metaKey &&
+                        !event.altKey &&
+                        !event.shiftKey
+                      ) {
+                        const continued = continueChecklistOnEnter(
+                          field.state.value,
+                          textarea.selectionStart,
+                          textarea.selectionEnd,
+                        );
+                        if (continued) {
+                          applyEdit(continued);
+                        }
+                        return;
+                      }
+
                       const shortcut = getDescriptionShortcut(event);
                       if (!shortcut) return;
 
-                      event.preventDefault();
-                      const textarea = event.currentTarget;
-                      const result = applyDescriptionShortcut(
-                        field.state.value,
-                        textarea.selectionStart,
-                        textarea.selectionEnd,
-                        shortcut,
+                      applyEdit(
+                        applyDescriptionShortcut(
+                          field.state.value,
+                          textarea.selectionStart,
+                          textarea.selectionEnd,
+                          shortcut,
+                        ),
                       );
-
-                      field.handleChange(result.value);
-
-                      requestAnimationFrame(() => {
-                        textarea.selectionStart = result.selectionStart;
-                        textarea.selectionEnd = result.selectionEnd;
-                      });
                     }}
                     placeholder="Add details or paste a markdown checklist (- [ ] item)"
                     rows={8}

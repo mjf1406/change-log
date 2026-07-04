@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   applyDescriptionShortcut,
+  continueChecklistOnEnter,
   indentSelectedLines,
   insertTextAtSelection,
   outdentSelectedLines,
@@ -51,5 +52,70 @@ describe("applyDescriptionShortcut", () => {
   it("inserts a plain bullet prefix", () => {
     const result = applyDescriptionShortcut("", 0, 0, "bullet");
     expect(result.value).toBe("- ");
+  });
+});
+
+describe("continueChecklistOnEnter", () => {
+  it("continues a top-level checklist item", () => {
+    const value = "- [ ] buy milk";
+    const cursor = value.length;
+    const result = continueChecklistOnEnter(value, cursor, cursor);
+    expect(result).toEqual({
+      value: "- [ ] buy milk\n- [ ] ",
+      selectionStart: "- [ ] buy milk\n- [ ] ".length,
+      selectionEnd: "- [ ] buy milk\n- [ ] ".length,
+    });
+  });
+
+  it("preserves space indentation", () => {
+    const value = "  - [ ] nested";
+    const cursor = value.length;
+    const result = continueChecklistOnEnter(value, cursor, cursor);
+    expect(result?.value).toBe("  - [ ] nested\n  - [ ] ");
+    expect(result?.selectionStart).toBe("  - [ ] nested\n  - [ ] ".length);
+  });
+
+  it("preserves tab indentation", () => {
+    const value = "\t- [ ] nested";
+    const cursor = value.length;
+    const result = continueChecklistOnEnter(value, cursor, cursor);
+    expect(result?.value).toBe("\t- [ ] nested\n\t- [ ] ");
+  });
+
+  it("splits content at the cursor", () => {
+    const value = "- [ ] foobar";
+    const cursor = "- [ ] foo".length;
+    const result = continueChecklistOnEnter(value, cursor, cursor);
+    expect(result?.value).toBe("- [ ] foo\n- [ ] bar");
+    expect(result?.selectionStart).toBe("- [ ] foo\n- [ ] ".length);
+  });
+
+  it("exits an empty checklist item", () => {
+    const value = "- [ ] item\n- [ ] ";
+    const cursor = value.length;
+    const result = continueChecklistOnEnter(value, cursor, cursor);
+    expect(result?.value).toBe("- [ ] item\n");
+    expect(result?.selectionStart).toBe("- [ ] item\n".length);
+  });
+
+  it("exits an empty checklist item without trailing space", () => {
+    const value = "- [ ]";
+    const result = continueChecklistOnEnter(value, value.length, value.length);
+    expect(result?.value).toBe("");
+    expect(result?.selectionStart).toBe(0);
+  });
+
+  it("returns null for non-checklist lines", () => {
+    const value = "plain text";
+    expect(continueChecklistOnEnter(value, value.length, value.length)).toBe(
+      null,
+    );
+  });
+
+  it("continues a checked item as unchecked", () => {
+    const value = "- [x] done";
+    const cursor = value.length;
+    const result = continueChecklistOnEnter(value, cursor, cursor);
+    expect(result?.value).toBe("- [x] done\n- [ ] ");
   });
 });
