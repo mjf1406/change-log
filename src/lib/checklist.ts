@@ -13,6 +13,10 @@ export type ChecklistProgress = {
   percent: number;
 };
 
+export type DescriptionSegment =
+  | { type: "prose"; text: string }
+  | { type: "bullets"; items: ChecklistItem[] };
+
 const BULLET_MARKER_RE = /^(\s*)([-*])(.*)$/;
 
 function getIndentDepth(whitespace: string): number {
@@ -126,6 +130,50 @@ export function hasChecklist(description: string | undefined | null): boolean {
 export function hasBulletList(description: string | undefined | null): boolean {
   if (!description?.trim()) return false;
   return parseFlatLines(description).length > 0;
+}
+
+export function parseDescriptionSegments(
+  description: string | undefined | null,
+): DescriptionSegment[] {
+  if (!description) return [];
+
+  const lines = description.split("\n");
+  const flatByIndex = new Map(
+    parseFlatLines(description).map((item) => [item.lineIndex, item]),
+  );
+  const segments: DescriptionSegment[] = [];
+  let proseLines: string[] = [];
+  let bulletLineIndices: number[] = [];
+
+  function flushProse() {
+    if (proseLines.length === 0) return;
+    segments.push({ type: "prose", text: proseLines.join("\n") });
+    proseLines = [];
+  }
+
+  function flushBullets() {
+    if (bulletLineIndices.length === 0) return;
+    const flat = bulletLineIndices
+      .map((lineIndex) => flatByIndex.get(lineIndex))
+      .filter((item): item is Omit<ChecklistItem, "children"> => item !== undefined);
+    segments.push({ type: "bullets", items: buildTree(flat) });
+    bulletLineIndices = [];
+  }
+
+  for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+    if (flatByIndex.has(lineIndex)) {
+      flushProse();
+      bulletLineIndices.push(lineIndex);
+    } else {
+      flushBullets();
+      proseLines.push(lines[lineIndex]);
+    }
+  }
+
+  flushProse();
+  flushBullets();
+
+  return segments;
 }
 
 export function toggleChecklistItem(

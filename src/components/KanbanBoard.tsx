@@ -756,6 +756,15 @@ export function KanbanBoard({ site }: KanbanBoardProps) {
                     if (!open) setViewingTaskId(null);
                 }}
                 task={viewingTask}
+                isAdmin={isAdmin}
+                onEdit={
+                    viewingTask
+                        ? () => {
+                              setViewingTaskId(null);
+                              setEditingTask(viewingTask);
+                          }
+                        : undefined
+                }
             />
 
             <DeleteConfirmDialog

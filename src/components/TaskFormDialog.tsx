@@ -25,6 +25,7 @@ import {
   getDescriptionShortcut,
   type TextEditResult,
 } from "@/lib/description-editor";
+import { autoformatBareUrls } from "@/lib/rich-text";
 import { db } from "@/lib/db";
 import type { Task } from "@/lib/sites";
 import {
@@ -189,7 +190,13 @@ function TaskFormDialogContent({
                   <Textarea
                     id={field.name}
                     value={field.state.value}
-                    onBlur={field.handleBlur}
+                    onBlur={(event) => {
+                      field.handleBlur();
+                      const formatted = autoformatBareUrls(event.target.value);
+                      if (formatted !== event.target.value) {
+                        field.handleChange(formatted);
+                      }
+                    }}
                     onChange={(event) => field.handleChange(event.target.value)}
                     onKeyDown={(event) => {
                       const textarea = event.currentTarget;

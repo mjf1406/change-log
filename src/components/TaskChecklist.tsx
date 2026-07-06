@@ -6,6 +6,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Progress } from "@/components/ui/progress";
+import { RichText } from "@/components/RichText";
 import {
   getChecklistProgress,
   parseChecklist,
@@ -14,6 +15,53 @@ import {
 } from "@/lib/checklist";
 import { db } from "@/lib/db";
 import { cn } from "@/lib/utils";
+
+type ChecklistTreeProps = {
+  items: ChecklistItem[];
+  isAdmin: boolean;
+  onToggle: (lineIndex: number) => void;
+  showProgressHeader?: boolean;
+  progress?: {
+    checked: number;
+    total: number;
+    percent: number;
+  };
+};
+
+export function ChecklistTree({
+  items,
+  isAdmin,
+  onToggle,
+  showProgressHeader = false,
+  progress,
+}: ChecklistTreeProps) {
+  return (
+    <div className="space-y-3">
+      {showProgressHeader && progress ? (
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+            <span>Progress</span>
+            <span className="font-medium text-foreground">
+              {progress.checked}/{progress.total} · {progress.percent}%
+            </span>
+          </div>
+          <Progress value={progress.percent} />
+        </div>
+      ) : null}
+
+      <ul className="space-y-1">
+        {items.map((item) => (
+          <ChecklistTreeItem
+            key={item.lineIndex}
+            item={item}
+            isAdmin={isAdmin}
+            onToggle={onToggle}
+          />
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 type TaskChecklistProps = {
   taskId: string;
@@ -47,30 +95,13 @@ export function TaskChecklist({
   }
 
   return (
-    <div className="space-y-3">
-      {showProgressHeader ? (
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
-            <span>Progress</span>
-            <span className="font-medium text-foreground">
-              {progress.checked}/{progress.total} · {progress.percent}%
-            </span>
-          </div>
-          <Progress value={progress.percent} />
-        </div>
-      ) : null}
-
-      <ul className="space-y-1">
-        {items.map((item) => (
-          <ChecklistTreeItem
-            key={item.lineIndex}
-            item={item}
-            isAdmin={isAdmin}
-            onToggle={handleToggle}
-          />
-        ))}
-      </ul>
-    </div>
+    <ChecklistTree
+      items={items}
+      isAdmin={isAdmin}
+      onToggle={handleToggle}
+      showProgressHeader={showProgressHeader}
+      progress={progress}
+    />
   );
 }
 
@@ -108,13 +139,21 @@ function ChecklistTreeItem({
             >
               {!item.hasCheckbox ? <BulletMarker /> : null}
               <ChevronRight className="size-3.5 shrink-0 text-muted-foreground transition-transform group-data-[state=open]/collapsible:rotate-90" />
-              <span className={cn(item.checked && item.hasCheckbox && "line-through text-muted-foreground")}>
-                {item.label || "\u00a0"}
+              <span
+                className={cn(
+                  item.checked && item.hasCheckbox && "line-through text-muted-foreground",
+                )}
+              >
+                {item.label ? (
+                  <RichText text={item.label} />
+                ) : (
+                  "\u00a0"
+                )}
               </span>
             </CollapsibleTrigger>
           </div>
           <CollapsibleContent>
-            <ul className="mt-1 space-y-1 border-l border-border pl-3 ml-1.5">
+            <ul className="mt-1 ml-1.5 space-y-1 border-l border-border pl-3">
               {item.children.map((child) => (
                 <ChecklistTreeItem
                   key={child.lineIndex}
@@ -134,7 +173,9 @@ function ChecklistTreeItem({
     return (
       <li className="flex min-h-6 items-start gap-2 text-sm font-medium text-foreground">
         <BulletMarker />
-        <span className="pt-0.5">{item.label || "\u00a0"}</span>
+        <span className="pt-0.5">
+          {item.label ? <RichText text={item.label} /> : "\u00a0"}
+        </span>
       </li>
     );
   }
@@ -153,7 +194,7 @@ function ChecklistTreeItem({
             item.checked && "line-through text-muted-foreground",
           )}
         >
-          {item.label}
+          <RichText text={item.label} />
         </span>
       </label>
     </li>

@@ -4,6 +4,7 @@ import {
   hasBulletList,
   hasChecklist,
   parseChecklist,
+  parseDescriptionSegments,
   toggleChecklistItem,
 } from "@/lib/checklist";
 
@@ -66,6 +67,45 @@ describe("hasChecklist", () => {
 
   it("returns true when checkboxes exist", () => {
     expect(hasChecklist("- [ ] item")).toBe(true);
+  });
+});
+
+describe("parseDescriptionSegments", () => {
+  it("splits mixed prose and bullet content in document order", () => {
+    const description = `Intro paragraph
+
+- [ ] item one
+- item two
+
+Closing notes`;
+
+    const segments = parseDescriptionSegments(description);
+    expect(segments).toHaveLength(3);
+    expect(segments[0]).toEqual({ type: "prose", text: "Intro paragraph\n" });
+    expect(segments[1].type).toBe("bullets");
+    if (segments[1].type === "bullets") {
+      expect(segments[1].items).toHaveLength(2);
+      expect(segments[1].items[0].label).toBe("item one");
+      expect(segments[1].items[1].label).toBe("item two");
+    }
+    expect(segments[2]).toEqual({ type: "prose", text: "\nClosing notes" });
+  });
+
+  it("returns a single prose segment for plain text", () => {
+    expect(parseDescriptionSegments("plain text")).toEqual([
+      { type: "prose", text: "plain text" },
+    ]);
+  });
+
+  it("returns a single bullets segment for bullet-only content", () => {
+    const segments = parseDescriptionSegments("- [ ] only item");
+    expect(segments).toHaveLength(1);
+    expect(segments[0].type).toBe("bullets");
+  });
+
+  it("returns an empty array for empty descriptions", () => {
+    expect(parseDescriptionSegments("")).toEqual([]);
+    expect(parseDescriptionSegments(undefined)).toEqual([]);
   });
 });
 
