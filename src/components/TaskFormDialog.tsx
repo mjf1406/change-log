@@ -3,13 +3,13 @@ import { useForm } from "@tanstack/react-form";
 import { id } from "@instantdb/react";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Credenza,
+  CredenzaContent,
+  CredenzaDescription,
+  CredenzaFooter,
+  CredenzaHeader,
+  CredenzaTitle,
+} from "@/components/ui/credenza";
 import {
   Field,
   FieldContent,
@@ -58,7 +58,7 @@ export function TaskFormDialog({
     mode === "edit" && task ? task.id : `create-${siteId ?? "task"}`;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Credenza open={open} onOpenChange={onOpenChange}>
       {open ? (
         <TaskFormDialogContent
           key={formKey}
@@ -69,7 +69,7 @@ export function TaskFormDialog({
           onClose={() => onOpenChange(false)}
         />
       ) : null}
-    </Dialog>
+    </Credenza>
   );
 }
 
@@ -133,17 +133,17 @@ function TaskFormDialogContent({
   });
 
   return (
-    <DialogContent className="sm:max-w-lg">
-      <DialogHeader>
-        <DialogTitle>
+    <CredenzaContent className="sm:max-w-lg">
+      <CredenzaHeader>
+        <CredenzaTitle>
           {mode === "create" ? "Add task" : "Edit task"}
-        </DialogTitle>
-        <DialogDescription>
+        </CredenzaTitle>
+        <CredenzaDescription>
           {mode === "create"
             ? "Create a new task for the todo column."
             : "Update the task name and description."}
-        </DialogDescription>
-      </DialogHeader>
+        </CredenzaDescription>
+      </CredenzaHeader>
 
       <form
         onKeyDown={(event) => {
@@ -263,15 +263,15 @@ function TaskFormDialogContent({
           ) : null}
         </FieldGroup>
 
-        <DialogFooter className="mt-6">
+        <CredenzaFooter className="mt-6">
           <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>
           <Button type="submit">
             {mode === "create" ? "Add task" : "Save changes"}
           </Button>
-        </DialogFooter>
+        </CredenzaFooter>
       </form>
-    </DialogContent>
+    </CredenzaContent>
   );
 }

@@ -26,12 +26,12 @@ import { TaskDetailDialog } from "@/components/TaskDetailDialog";
 import { TaskFormDialog } from "@/components/TaskFormDialog";
 import { Button } from "@/components/ui/button";
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
+    Credenza,
+    CredenzaContent,
+    CredenzaDescription,
+    CredenzaHeader,
+    CredenzaTitle,
+} from "@/components/ui/credenza";
 import {
     Collapsible,
     CollapsibleContent,
@@ -239,21 +239,21 @@ function KanbanColumn({
             </header>
 
             {canBulkMove ? (
-                <Dialog
+                <Credenza
                     open={moveDialogOpen}
                     onOpenChange={setMoveDialogOpen}
                 >
-                    <DialogContent showCloseButton>
-                        <DialogHeader>
-                            <DialogTitle>
+                    <CredenzaContent showCloseButton>
+                        <CredenzaHeader>
+                            <CredenzaTitle>
                                 Move all {TASK_STATUS_LABELS[status]} tasks
-                            </DialogTitle>
-                            <DialogDescription>
+                            </CredenzaTitle>
+                            <CredenzaDescription>
                                 Choose a destination column for all{" "}
                                 {tasks.length}{" "}
                                 {tasks.length === 1 ? "task" : "tasks"}.
-                            </DialogDescription>
-                        </DialogHeader>
+                            </CredenzaDescription>
+                        </CredenzaHeader>
                         <div className="flex flex-col gap-2">
                             {bulkMoveTargets.map((target) => (
                                 <Button
@@ -270,8 +270,8 @@ function KanbanColumn({
                                 </Button>
                             ))}
                         </div>
-                    </DialogContent>
-                </Dialog>
+                    </CredenzaContent>
+                </Credenza>
             ) : null}
 
             {status === "todo" && isAdmin ? (

@@ -4,13 +4,13 @@ import { id } from "@instantdb/react";
 import { ImagePlus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Credenza,
+  CredenzaContent,
+  CredenzaDescription,
+  CredenzaFooter,
+  CredenzaHeader,
+  CredenzaTitle,
+} from "@/components/ui/credenza";
 import {
   Field,
   FieldContent,
@@ -49,7 +49,7 @@ export function SiteFormDialog({
   const formKey = mode === "edit" && site ? site.id : "create";
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Credenza open={open} onOpenChange={onOpenChange}>
       {open ? (
         <SiteFormDialogContent
           key={formKey}
@@ -58,7 +58,7 @@ export function SiteFormDialog({
           onClose={() => onOpenChange(false)}
         />
       ) : null}
-    </Dialog>
+    </Credenza>
   );
 }
 
@@ -145,17 +145,17 @@ function SiteFormDialogContent({
   };
 
   return (
-    <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
-      <DialogHeader>
-        <DialogTitle>
+    <CredenzaContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+      <CredenzaHeader>
+        <CredenzaTitle>
           {mode === "create" ? "Add site" : "Edit site"}
-        </DialogTitle>
-        <DialogDescription>
+        </CredenzaTitle>
+        <CredenzaDescription>
           {mode === "create"
             ? "Create a new site for the navbar and changelog."
             : "Update site details, links, and logo."}
-        </DialogDescription>
-      </DialogHeader>
+        </CredenzaDescription>
+      </CredenzaHeader>
 
       <form
         onSubmit={(event) => {
@@ -325,7 +325,7 @@ function SiteFormDialogContent({
           ) : null}
         </FieldGroup>
 
-        <DialogFooter className="mt-6">
+        <CredenzaFooter className="mt-6">
           <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>
@@ -336,9 +336,9 @@ function SiteFormDialogContent({
               </Button>
             )}
           </form.Subscribe>
-        </DialogFooter>
+        </CredenzaFooter>
       </form>
-    </DialogContent>
+    </CredenzaContent>
   );
 }
 

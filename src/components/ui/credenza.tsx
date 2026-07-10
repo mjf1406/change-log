@@ -38,8 +38,10 @@ interface RootCredenzaProps extends BaseProps {
 
 interface CredenzaProps extends BaseProps {
     className?: string;
-    asChild?: true;
+    asChild?: boolean;
 }
+
+type CredenzaContentProps = React.ComponentProps<typeof DialogContent>;
 
 const CredenzaContext = React.createContext<{ isDesktop: boolean }>({
     isDesktop: false,
@@ -99,17 +101,33 @@ const CredenzaClose = ({ className, children, ...props }: CredenzaProps) => {
     );
 };
 
-const CredenzaContent = ({ className, children, ...props }: CredenzaProps) => {
+const CredenzaContent = ({
+    className,
+    children,
+    showCloseButton,
+    ...props
+}: CredenzaContentProps) => {
     const { isDesktop } = useCredenzaContext();
-    const CredenzaContent = isDesktop ? DialogContent : DrawerContent;
+
+    if (isDesktop) {
+        return (
+            <DialogContent
+                className={className}
+                showCloseButton={showCloseButton}
+                {...props}
+            >
+                {children}
+            </DialogContent>
+        );
+    }
 
     return (
-        <CredenzaContent
+        <DrawerContent
             className={className}
             {...props}
         >
             {children}
-        </CredenzaContent>
+        </DrawerContent>
     );
 };
 

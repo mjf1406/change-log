@@ -4,13 +4,13 @@ import { ChecklistTree } from "@/components/TaskChecklist";
 import { RichText } from "@/components/RichText";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Credenza,
+  CredenzaContent,
+  CredenzaDescription,
+  CredenzaFooter,
+  CredenzaHeader,
+  CredenzaTitle,
+} from "@/components/ui/credenza";
 import {
   getChecklistProgress,
   hasChecklist,
@@ -62,16 +62,16 @@ export function TaskDetailDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
+    <Credenza open={open} onOpenChange={onOpenChange}>
+      <CredenzaContent
         className={hasDescription ? "sm:max-w-2xl" : "sm:max-w-md"}
       >
-        <DialogHeader>
-          <DialogTitle>{task.text}</DialogTitle>
-          <DialogDescription className="sr-only">
+        <CredenzaHeader>
+          <CredenzaTitle>{task.text}</CredenzaTitle>
+          <CredenzaDescription className="sr-only">
             Task details
-          </DialogDescription>
-        </DialogHeader>
+          </CredenzaDescription>
+        </CredenzaHeader>
 
         <div
           className={
@@ -158,14 +158,14 @@ export function TaskDetailDialog({
         </div>
 
         {isAdmin && onEdit ? (
-          <DialogFooter>
+          <CredenzaFooter>
             <Button type="button" variant="outline" onClick={onEdit}>
               <Pencil className="size-3.5" />
               Edit
             </Button>
-          </DialogFooter>
+          </CredenzaFooter>
         ) : null}
-      </DialogContent>
-    </Dialog>
+      </CredenzaContent>
+    </Credenza>
   );
 }

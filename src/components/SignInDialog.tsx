@@ -10,12 +10,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Credenza,
+  CredenzaContent,
+  CredenzaDescription,
+  CredenzaHeader,
+  CredenzaTitle,
+} from "@/components/ui/credenza";
 
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const googleClientName = import.meta.env.VITE_GOOGLE_CLIENT_NAME;
@@ -70,14 +70,14 @@ export function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
   const missingConfig = !googleClientId || !googleClientName;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-sm">
-        <DialogHeader>
-          <DialogTitle>Sign in</DialogTitle>
-          <DialogDescription>
+    <Credenza open={open} onOpenChange={onOpenChange}>
+      <CredenzaContent className="sm:max-w-sm">
+        <CredenzaHeader>
+          <CredenzaTitle>Sign in</CredenzaTitle>
+          <CredenzaDescription>
             Sign in with your Google account.
-          </DialogDescription>
-        </DialogHeader>
+          </CredenzaDescription>
+        </CredenzaHeader>
 
         {missingConfig ? (
           <p className="text-destructive text-sm">
@@ -128,7 +128,7 @@ export function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
             ) : null}
           </div>
         )}
-      </DialogContent>
-    </Dialog>
+      </CredenzaContent>
+    </Credenza>
   );
 }
