@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   applyDescriptionShortcut,
+  continueBulletOnEnter,
   continueChecklistOnEnter,
   getDescriptionShortcut,
   type TextEditResult,
@@ -216,11 +217,17 @@ function TaskFormDialogContent({
                         !event.altKey &&
                         !event.shiftKey
                       ) {
-                        const continued = continueChecklistOnEnter(
-                          field.state.value,
-                          textarea.selectionStart,
-                          textarea.selectionEnd,
-                        );
+                        const continued =
+                          continueChecklistOnEnter(
+                            field.state.value,
+                            textarea.selectionStart,
+                            textarea.selectionEnd,
+                          ) ??
+                          continueBulletOnEnter(
+                            field.state.value,
+                            textarea.selectionStart,
+                            textarea.selectionEnd,
+                          );
                         if (continued) {
                           applyEdit(continued);
                         }

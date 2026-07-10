@@ -120,6 +120,8 @@ export function outdentSelectedLines(
 }
 
 const CHECKLIST_LINE_RE = /^(\s*)[-*] \[[ xX]\](.*)$/;
+const BULLET_LINE_RE = /^(\s*)[-*] (?!\[[ xX]\])(.*)$/;
+const LONE_BULLET_LINE_RE = /^(\s*)[-*]$/;
 
 export function continueChecklistOnEnter(
   value: string,
@@ -143,6 +145,36 @@ export function continueChecklistOnEnter(
   }
 
   const prefix = `${indent}- [ ] `;
+  return insertTextAtSelection(
+    value,
+    selectionStart,
+    selectionEnd,
+    `\n${prefix}`,
+  );
+}
+
+export function continueBulletOnEnter(
+  value: string,
+  selectionStart: number,
+  selectionEnd: number,
+): TextEditResult | null {
+  const { lineStart, lineEnd } = getLineRange(value, selectionStart);
+  const line = value.slice(lineStart, lineEnd);
+  const match = line.match(BULLET_LINE_RE) ?? line.match(LONE_BULLET_LINE_RE);
+  if (!match) return null;
+
+  const [, indent = "", rest = ""] = match;
+
+  if (rest.trim() === "") {
+    const nextValue = value.slice(0, lineStart) + value.slice(lineEnd);
+    return {
+      value: nextValue,
+      selectionStart: lineStart,
+      selectionEnd: lineStart,
+    };
+  }
+
+  const prefix = `${indent}- `;
   return insertTextAtSelection(
     value,
     selectionStart,

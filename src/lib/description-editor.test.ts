@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   applyDescriptionShortcut,
+  continueBulletOnEnter,
   continueChecklistOnEnter,
   indentSelectedLines,
   insertTextAtSelection,
@@ -117,5 +118,66 @@ describe("continueChecklistOnEnter", () => {
     const cursor = value.length;
     const result = continueChecklistOnEnter(value, cursor, cursor);
     expect(result?.value).toBe("- [x] done\n- [ ] ");
+  });
+});
+
+describe("continueBulletOnEnter", () => {
+  it("continues a top-level bullet item", () => {
+    const value = "- buy milk";
+    const cursor = value.length;
+    const result = continueBulletOnEnter(value, cursor, cursor);
+    expect(result).toEqual({
+      value: "- buy milk\n- ",
+      selectionStart: "- buy milk\n- ".length,
+      selectionEnd: "- buy milk\n- ".length,
+    });
+  });
+
+  it("preserves space indentation", () => {
+    const value = "  - nested";
+    const cursor = value.length;
+    const result = continueBulletOnEnter(value, cursor, cursor);
+    expect(result?.value).toBe("  - nested\n  - ");
+    expect(result?.selectionStart).toBe("  - nested\n  - ".length);
+  });
+
+  it("preserves tab indentation", () => {
+    const value = "\t- nested";
+    const cursor = value.length;
+    const result = continueBulletOnEnter(value, cursor, cursor);
+    expect(result?.value).toBe("\t- nested\n\t- ");
+  });
+
+  it("splits content at the cursor", () => {
+    const value = "- foobar";
+    const cursor = "- foo".length;
+    const result = continueBulletOnEnter(value, cursor, cursor);
+    expect(result?.value).toBe("- foo\n- bar");
+    expect(result?.selectionStart).toBe("- foo\n- ".length);
+  });
+
+  it("exits an empty bullet item", () => {
+    const value = "- item\n- ";
+    const cursor = value.length;
+    const result = continueBulletOnEnter(value, cursor, cursor);
+    expect(result?.value).toBe("- item\n");
+    expect(result?.selectionStart).toBe("- item\n".length);
+  });
+
+  it("exits a lone dash bullet line", () => {
+    const value = "-";
+    const result = continueBulletOnEnter(value, value.length, value.length);
+    expect(result?.value).toBe("");
+    expect(result?.selectionStart).toBe(0);
+  });
+
+  it("returns null for non-bullet lines", () => {
+    const value = "plain text";
+    expect(continueBulletOnEnter(value, value.length, value.length)).toBe(null);
+  });
+
+  it("returns null for checklist lines", () => {
+    const value = "- [ ] item";
+    expect(continueBulletOnEnter(value, value.length, value.length)).toBe(null);
   });
 });
