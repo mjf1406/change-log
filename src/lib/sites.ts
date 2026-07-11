@@ -57,10 +57,7 @@ export function useWorkOrderSites() {
     sites: {
       $: { order: { order: "asc" } },
       tasks: {
-        $: {
-          where: { status: { $in: ["todo", "doing"] } },
-          order: { order: "asc" },
-        },
+        $: { order: { order: "asc" } },
       },
       logo: {},
     },

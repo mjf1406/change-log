@@ -25,6 +25,8 @@ export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
   dreams: "Dreams",
 };
 
+export const DEFAULT_WORK_ORDER_STATUSES: TaskStatus[] = ["todo", "doing"];
+
 export type ColumnTasks = Record<TaskStatus, Task[]>;
 
 export const DONE_BOARD_RETENTION_MS = 24 * 60 * 60 * 1000;

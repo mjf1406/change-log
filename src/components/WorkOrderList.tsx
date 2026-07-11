@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Check, ChevronDown, Copy, Pencil, Trash2 } from "lucide-react";
 import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
@@ -6,17 +6,20 @@ import { PageLoader } from "@/components/PageLoader";
 import { SiteAvatar } from "@/components/SiteAvatar";
 import { TaskFormDialog } from "@/components/TaskFormDialog";
 import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
 import {
   Card,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useWorkOrderFilter } from "@/hooks/useWorkOrderFilter";
 import type { SiteWithTasks, Task } from "@/lib/sites";
 import { useWorkOrderSites } from "@/lib/sites";
 import { useIsAdmin } from "@/lib/admin";
 import { db } from "@/lib/db";
 import {
+  DEFAULT_WORK_ORDER_STATUSES,
   TASK_STATUSES,
   TASK_STATUS_LABELS,
   formatTaskDateTime,
@@ -25,24 +28,12 @@ import {
   toDate,
   type TaskStatus,
 } from "@/lib/tasks";
+import {
+  countSitesWithTasks,
+  type DateSort,
+  type WorkOrderItem,
+} from "@/lib/workOrderFilter";
 import { cn } from "@/lib/utils";
-
-type DateSort = "desc" | "asc";
-
-type WorkOrderItem = {
-  task: SiteWithTasks["tasks"][number];
-  site: Pick<SiteWithTasks, "id" | "name" | "slug" | "logo">;
-};
-
-function sortWorkOrderItems(items: WorkOrderItem[], dateSort: DateSort) {
-  const direction = dateSort === "desc" ? -1 : 1;
-
-  return [...items].sort((a, b) => {
-    const dateDiff = (a.task.createdAt - b.task.createdAt) * direction;
-    if (dateDiff !== 0) return dateDiff;
-    return a.task.order - b.task.order;
-  });
-}
 
 function SiteBadge({
   site,
@@ -259,31 +250,21 @@ function WorkOrderTaskRow({
 
 export function WorkOrderList() {
   const { isAdmin } = useIsAdmin();
+  const [selectedStatuses, setSelectedStatuses] = useState<TaskStatus[]>(
+    DEFAULT_WORK_ORDER_STATUSES,
+  );
   const { isLoading, error, sites } = useWorkOrderSites();
   const [dateSort, setDateSort] = useState<DateSort>("desc");
+  const { items: sortedItems, isFiltering } = useWorkOrderFilter(
+    sites,
+    selectedStatuses,
+    dateSort,
+    !isLoading,
+  );
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
 
-  const sitesWithTasks = useMemo(
-    () => sites.filter((site) => site.tasks.length > 0),
-    [sites],
-  );
-
-  const sortedItems = useMemo(() => {
-    const items: WorkOrderItem[] = sitesWithTasks.flatMap((site) =>
-      site.tasks.map((task) => ({
-        task,
-        site: {
-          id: site.id,
-          name: site.name,
-          slug: site.slug,
-          logo: site.logo,
-        },
-      })),
-    );
-    return sortWorkOrderItems(items, dateSort);
-  }, [sitesWithTasks, dateSort]);
-
+  const siteCount = countSitesWithTasks(sortedItems);
   const totalTasks = sortedItems.length;
 
   const handleDeleteTask = () => {
@@ -301,7 +282,7 @@ export function WorkOrderList() {
     const fromStatus = task.status as TaskStatus;
     if (fromStatus === toStatus || !TASK_STATUSES.includes(fromStatus)) return;
 
-    const site = sitesWithTasks.find((entry) => entry.id === siteId);
+    const site = sites.find((entry) => entry.id === siteId);
     if (!site) return;
 
     const now = Date.now();
@@ -329,40 +310,90 @@ export function WorkOrderList() {
     <>
       <div className="space-y-6">
         <div className="flex items-start justify-between gap-4">
-          <p className="text-sm text-muted-foreground">
-            {totalTasks === 0
-              ? "No open tasks"
-              : `${totalTasks} open ${totalTasks === 1 ? "task" : "tasks"} across ${sitesWithTasks.length} ${sitesWithTasks.length === 1 ? "site" : "sites"}`}
+          <p
+            className={cn(
+              "text-sm text-muted-foreground transition-opacity",
+              isFiltering && "opacity-60",
+            )}
+          >
+            {selectedStatuses.length === 0
+              ? "Select at least one status to show tasks."
+              : totalTasks === 0
+                ? "No tasks match the selected statuses."
+                : `${totalTasks} ${totalTasks === 1 ? "task" : "tasks"} across ${siteCount} ${siteCount === 1 ? "site" : "sites"}`}
           </p>
-          {totalTasks > 0 ? (
-            <div className="flex shrink-0 items-center gap-1">
-              <Button
-                type="button"
-                variant={dateSort === "desc" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setDateSort("desc")}
-              >
-                Newest
-              </Button>
-              <Button
-                type="button"
-                variant={dateSort === "asc" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setDateSort("asc")}
-              >
-                Oldest
-              </Button>
+          <div
+            className={cn(
+              "flex shrink-0 flex-wrap items-center justify-end gap-2 transition-opacity",
+              isFiltering && "opacity-60",
+            )}
+          >
+            <ButtonGroup aria-label="Filter by status">
+              {TASK_STATUSES.map((status) => {
+                const selected = selectedStatuses.includes(status);
+                return (
+                  <Button
+                    key={status}
+                    type="button"
+                    size="sm"
+                    variant={selected ? "default" : "outline"}
+                    aria-pressed={selected}
+                    onClick={() => {
+                      setSelectedStatuses((current) =>
+                        selected
+                          ? current.filter((entry) => entry !== status)
+                          : [...current, status],
+                      );
+                    }}
+                  >
+                    {TASK_STATUS_LABELS[status]}
+                  </Button>
+                );
+              })}
+            </ButtonGroup>
+            <div role="radiogroup" aria-label="Sort order">
+              <ButtonGroup>
+                <Button
+                  type="button"
+                  role="radio"
+                  size="sm"
+                  variant={dateSort === "desc" ? "default" : "outline"}
+                  aria-checked={dateSort === "desc"}
+                  onClick={() => setDateSort("desc")}
+                >
+                  Newest
+                </Button>
+                <Button
+                  type="button"
+                  role="radio"
+                  size="sm"
+                  variant={dateSort === "asc" ? "default" : "outline"}
+                  aria-checked={dateSort === "asc"}
+                  onClick={() => setDateSort("asc")}
+                >
+                  Oldest
+                </Button>
+              </ButtonGroup>
             </div>
-          ) : null}
+          </div>
         </div>
 
-        {sitesWithTasks.length === 0 ? (
+        {selectedStatuses.length === 0 ? (
           <Card>
             <CardHeader>
-              <CardTitle>All caught up</CardTitle>
+              <CardTitle>No statuses selected</CardTitle>
               <CardDescription>
-                No open tasks across any site. Check individual boards for
-                completed work.
+                Select at least one status to show tasks.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        ) : totalTasks === 0 ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>No matching tasks</CardTitle>
+              <CardDescription>
+                No tasks match the selected statuses. Try selecting additional
+                statuses.
               </CardDescription>
             </CardHeader>
           </Card>
