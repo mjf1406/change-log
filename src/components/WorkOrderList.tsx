@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Check, ChevronDown, Copy, Pencil, Trash2 } from "lucide-react";
+import { Check, Copy, Pencil, Trash2 } from "lucide-react";
 import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
 import { PageLoader } from "@/components/PageLoader";
 import { SiteAvatar } from "@/components/SiteAvatar";
@@ -13,6 +13,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useWorkOrderFilter } from "@/hooks/useWorkOrderFilter";
 import type { SiteWithTasks, Task } from "@/lib/sites";
 import { useWorkOrderSites } from "@/lib/sites";
@@ -63,19 +70,17 @@ function getAppendColumnOrder(
   return Math.max(...column.map((task) => task.order)) + 1;
 }
 
-function statusBadgeClass(status: TaskStatus) {
+function statusBadgeClass() {
   return cn(
     "shrink-0 rounded-md border px-2 py-0.5 text-xs font-medium",
-    status === "doing"
-      ? "border-primary/30 bg-primary/10 text-primary"
-      : "border-border bg-muted text-muted-foreground",
+    "border-border bg-muted text-muted-foreground",
   );
 }
 
 function StatusBadge({ status }: { status: TaskStatus }) {
   if (!TASK_STATUSES.includes(status)) return null;
 
-  return <span className={statusBadgeClass(status)}>{TASK_STATUS_LABELS[status]}</span>;
+  return <span className={statusBadgeClass()}>{TASK_STATUS_LABELS[status]}</span>;
 }
 
 function StatusSelect({
@@ -90,28 +95,29 @@ function StatusSelect({
   if (!TASK_STATUSES.includes(status)) return null;
 
   return (
-    <div className="relative shrink-0">
-      <select
-        value={status}
-        disabled={disabled}
+    <Select
+      value={status}
+      disabled={disabled}
+      onValueChange={(value) => onChange(value as TaskStatus)}
+    >
+      <SelectTrigger
+        size="sm"
         aria-label="Task status"
-        onChange={(event) => onChange(event.target.value as TaskStatus)}
         className={cn(
-          statusBadgeClass(status),
-          "cursor-pointer appearance-none pr-7 shadow-xs outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50",
+          statusBadgeClass(),
+          "h-auto min-h-0 gap-1 py-0.5 pr-1.5 pl-2 shadow-xs dark:bg-muted dark:hover:bg-muted",
         )}
       >
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
         {TASK_STATUSES.map((option) => (
-          <option key={option} value={option}>
+          <SelectItem key={option} value={option}>
             {TASK_STATUS_LABELS[option]}
-          </option>
+          </SelectItem>
         ))}
-      </select>
-      <ChevronDown
-        className="pointer-events-none absolute top-1/2 right-1.5 size-3 -translate-y-1/2 opacity-60"
-        aria-hidden
-      />
-    </div>
+      </SelectContent>
+    </Select>
   );
 }
 
