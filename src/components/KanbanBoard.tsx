@@ -27,6 +27,7 @@ import { TaskFormDialog } from "@/components/TaskFormDialog";
 import { Button } from "@/components/ui/button";
 import {
     Credenza,
+    CredenzaBody,
     CredenzaContent,
     CredenzaDescription,
     CredenzaHeader,
@@ -254,22 +255,24 @@ function KanbanColumn({
                                 {tasks.length === 1 ? "task" : "tasks"}.
                             </CredenzaDescription>
                         </CredenzaHeader>
-                        <div className="flex flex-col gap-2">
-                            {bulkMoveTargets.map((target) => (
-                                <Button
-                                    key={target}
-                                    type="button"
-                                    variant="outline"
-                                    className="justify-start"
-                                    onClick={() => {
-                                        setMoveDialogOpen(false);
-                                        onRequestBulkMove(target);
-                                    }}
-                                >
-                                    Move to {TASK_STATUS_LABELS[target]}
-                                </Button>
-                            ))}
-                        </div>
+                        <CredenzaBody>
+                            <div className="flex flex-col gap-2">
+                                {bulkMoveTargets.map((target) => (
+                                    <Button
+                                        key={target}
+                                        type="button"
+                                        variant="outline"
+                                        className="justify-start"
+                                        onClick={() => {
+                                            setMoveDialogOpen(false);
+                                            onRequestBulkMove(target);
+                                        }}
+                                    >
+                                        Move to {TASK_STATUS_LABELS[target]}
+                                    </Button>
+                                ))}
+                            </div>
+                        </CredenzaBody>
                     </CredenzaContent>
                 </Credenza>
             ) : null}

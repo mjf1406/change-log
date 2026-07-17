@@ -5,6 +5,7 @@ import { ImagePlus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Credenza,
+  CredenzaBody,
   CredenzaContent,
   CredenzaDescription,
   CredenzaFooter,
@@ -164,166 +165,168 @@ function SiteFormDialogContent({
           void form.handleSubmit();
         }}
       >
-        <FieldGroup>
-          <form.Field name="name">
-            {(field) => (
-              <Field data-invalid={field.state.meta.errors.length > 0}>
-                <FieldLabel htmlFor={field.name}>Name</FieldLabel>
-                <FieldContent>
-                  <Input
-                    id={field.name}
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(event) => {
-                      const name = event.target.value;
-                      field.handleChange(name);
-                      if (!slugTouched) {
-                        form.setFieldValue(
-                          "slug",
-                          syncSlugFromName(
-                            name,
-                            slugTouched,
-                            form.state.values.slug,
-                          ),
-                        );
-                      }
-                    }}
-                    placeholder="Site name"
-                  />
-                  <FieldError errors={field.state.meta.errors} />
-                </FieldContent>
-              </Field>
-            )}
-          </form.Field>
+        <CredenzaBody>
+          <FieldGroup>
+            <form.Field name="name">
+              {(field) => (
+                <Field data-invalid={field.state.meta.errors.length > 0}>
+                  <FieldLabel htmlFor={field.name}>Name</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      id={field.name}
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(event) => {
+                        const name = event.target.value;
+                        field.handleChange(name);
+                        if (!slugTouched) {
+                          form.setFieldValue(
+                            "slug",
+                            syncSlugFromName(
+                              name,
+                              slugTouched,
+                              form.state.values.slug,
+                            ),
+                          );
+                        }
+                      }}
+                      placeholder="Site name"
+                    />
+                    <FieldError errors={field.state.meta.errors} />
+                  </FieldContent>
+                </Field>
+              )}
+            </form.Field>
 
-          <form.Field name="slug">
-            {(field) => (
-              <Field data-invalid={field.state.meta.errors.length > 0}>
-                <FieldLabel htmlFor={field.name}>Slug</FieldLabel>
-                <FieldContent>
-                  <Input
-                    id={field.name}
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(event) => {
-                      setSlugTouched(true);
-                      field.handleChange(slugify(event.target.value));
-                    }}
-                    placeholder="site-slug"
-                  />
-                  <FieldError errors={field.state.meta.errors} />
-                </FieldContent>
-              </Field>
-            )}
-          </form.Field>
+            <form.Field name="slug">
+              {(field) => (
+                <Field data-invalid={field.state.meta.errors.length > 0}>
+                  <FieldLabel htmlFor={field.name}>Slug</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      id={field.name}
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(event) => {
+                        setSlugTouched(true);
+                        field.handleChange(slugify(event.target.value));
+                      }}
+                      placeholder="site-slug"
+                    />
+                    <FieldError errors={field.state.meta.errors} />
+                  </FieldContent>
+                </Field>
+              )}
+            </form.Field>
 
-          <form.Field name="description">
-            {(field) => (
-              <Field>
-                <FieldLabel htmlFor={field.name}>Description</FieldLabel>
-                <FieldContent>
-                  <Input
-                    id={field.name}
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(event) => field.handleChange(event.target.value)}
-                    placeholder="Optional description"
-                  />
-                </FieldContent>
-              </Field>
-            )}
-          </form.Field>
+            <form.Field name="description">
+              {(field) => (
+                <Field>
+                  <FieldLabel htmlFor={field.name}>Description</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      id={field.name}
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(event) => field.handleChange(event.target.value)}
+                      placeholder="Optional description"
+                    />
+                  </FieldContent>
+                </Field>
+              )}
+            </form.Field>
 
-          <form.Field name="liveUrl">
-            {(field) => (
-              <Field data-invalid={field.state.meta.errors.length > 0}>
-                <FieldLabel htmlFor={field.name}>Live URL</FieldLabel>
-                <FieldContent>
-                  <Input
-                    id={field.name}
-                    type="url"
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(event) => field.handleChange(event.target.value)}
-                    placeholder="https://example.com (optional)"
-                  />
-                  <FieldError errors={field.state.meta.errors} />
-                </FieldContent>
-              </Field>
-            )}
-          </form.Field>
+            <form.Field name="liveUrl">
+              {(field) => (
+                <Field data-invalid={field.state.meta.errors.length > 0}>
+                  <FieldLabel htmlFor={field.name}>Live URL</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      id={field.name}
+                      type="url"
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(event) => field.handleChange(event.target.value)}
+                      placeholder="https://example.com (optional)"
+                    />
+                    <FieldError errors={field.state.meta.errors} />
+                  </FieldContent>
+                </Field>
+              )}
+            </form.Field>
 
-          <form.Field name="githubUrl">
-            {(field) => (
-              <Field data-invalid={field.state.meta.errors.length > 0}>
-                <FieldLabel htmlFor={field.name}>GitHub URL</FieldLabel>
-                <FieldContent>
-                  <Input
-                    id={field.name}
-                    type="url"
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(event) => field.handleChange(event.target.value)}
-                    placeholder="https://github.com/... (optional)"
-                  />
-                  <FieldError errors={field.state.meta.errors} />
-                </FieldContent>
-              </Field>
-            )}
-          </form.Field>
+            <form.Field name="githubUrl">
+              {(field) => (
+                <Field data-invalid={field.state.meta.errors.length > 0}>
+                  <FieldLabel htmlFor={field.name}>GitHub URL</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      id={field.name}
+                      type="url"
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(event) => field.handleChange(event.target.value)}
+                      placeholder="https://github.com/... (optional)"
+                    />
+                    <FieldError errors={field.state.meta.errors} />
+                  </FieldContent>
+                </Field>
+              )}
+            </form.Field>
 
-          <Field>
-            <FieldLabel htmlFor="site-logo">Logo</FieldLabel>
-            <FieldContent>
-              <div className="flex items-center gap-3">
-                {logoPreview ? (
-                  <img
-                    src={logoPreview}
-                    alt=""
-                    className="size-12 rounded-md border border-border object-cover"
-                  />
-                ) : (
-                  <div className="flex size-12 items-center justify-center rounded-md border border-dashed border-border bg-muted/30">
-                    <ImagePlus className="size-4 text-muted-foreground" />
-                  </div>
-                )}
-                <div className="flex flex-wrap gap-2">
-                  <Button type="button" variant="outline" size="sm" asChild>
-                    <label htmlFor="site-logo" className="cursor-pointer">
-                      Choose image
-                    </label>
-                  </Button>
+            <Field>
+              <FieldLabel htmlFor="site-logo">Logo</FieldLabel>
+              <FieldContent>
+                <div className="flex items-center gap-3">
                   {logoPreview ? (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleRemoveLogo}
-                    >
-                      <X data-icon="inline-start" />
-                      Remove
+                    <img
+                      src={logoPreview}
+                      alt=""
+                      className="size-12 rounded-md border border-border object-cover"
+                    />
+                  ) : (
+                    <div className="flex size-12 items-center justify-center rounded-md border border-dashed border-border bg-muted/30">
+                      <ImagePlus className="size-4 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div className="flex flex-wrap gap-2">
+                    <Button type="button" variant="outline" size="sm" asChild>
+                      <label htmlFor="site-logo" className="cursor-pointer">
+                        Choose image
+                      </label>
                     </Button>
-                  ) : null}
+                    {logoPreview ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleRemoveLogo}
+                      >
+                        <X data-icon="inline-start" />
+                        Remove
+                      </Button>
+                    ) : null}
+                  </div>
+                  <input
+                    id="site-logo"
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0] ?? null;
+                      handleLogoChange(file);
+                      event.target.value = "";
+                    }}
+                  />
                 </div>
-                <input
-                  id="site-logo"
-                  type="file"
-                  accept="image/*"
-                  className="sr-only"
-                  onChange={(event) => {
-                    const file = event.target.files?.[0] ?? null;
-                    handleLogoChange(file);
-                    event.target.value = "";
-                  }}
-                />
-              </div>
-            </FieldContent>
-          </Field>
+              </FieldContent>
+            </Field>
 
-          {submitError ? (
-            <p className="text-sm text-destructive">{submitError}</p>
-          ) : null}
-        </FieldGroup>
+            {submitError ? (
+              <p className="text-sm text-destructive">{submitError}</p>
+            ) : null}
+          </FieldGroup>
+        </CredenzaBody>
 
         <CredenzaFooter className="mt-6">
           <Button type="button" variant="outline" onClick={onClose}>

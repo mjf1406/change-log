@@ -4,6 +4,7 @@ import { id } from "@instantdb/react";
 import { Button } from "@/components/ui/button";
 import {
   Credenza,
+  CredenzaBody,
   CredenzaContent,
   CredenzaDescription,
   CredenzaFooter,
@@ -158,110 +159,112 @@ function TaskFormDialogContent({
           void form.handleSubmit();
         }}
       >
-        <FieldGroup>
-          <form.Field name="text">
-            {(field) => (
-              <Field data-invalid={field.state.meta.errors.length > 0}>
-                <FieldLabel htmlFor={field.name}>Name</FieldLabel>
-                <FieldContent>
-                  <Input
-                    id={field.name}
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(event) => field.handleChange(event.target.value)}
-                    placeholder="Task name"
-                    autoFocus
-                  />
-                  <FieldError errors={field.state.meta.errors} />
-                </FieldContent>
-              </Field>
-            )}
-          </form.Field>
+        <CredenzaBody>
+          <FieldGroup>
+            <form.Field name="text">
+              {(field) => (
+                <Field data-invalid={field.state.meta.errors.length > 0}>
+                  <FieldLabel htmlFor={field.name}>Name</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      id={field.name}
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(event) => field.handleChange(event.target.value)}
+                      placeholder="Task name"
+                      autoFocus
+                    />
+                    <FieldError errors={field.state.meta.errors} />
+                  </FieldContent>
+                </Field>
+              )}
+            </form.Field>
 
-          <form.Field name="description">
-            {(field) => (
-              <Field data-invalid={field.state.meta.errors.length > 0}>
-                <FieldLabel htmlFor={field.name}>
-                  Description{" "}
-                  <span className="font-normal text-muted-foreground">
-                    (optional)
-                  </span>
-                </FieldLabel>
-                <FieldContent>
-                  <Textarea
-                    id={field.name}
-                    value={field.state.value}
-                    onBlur={(event) => {
-                      field.handleBlur();
-                      const formatted = autoformatBareUrls(event.target.value);
-                      if (formatted !== event.target.value) {
-                        field.handleChange(formatted);
-                      }
-                    }}
-                    onChange={(event) => field.handleChange(event.target.value)}
-                    onKeyDown={(event) => {
-                      const textarea = event.currentTarget;
-                      const applyEdit = (result: TextEditResult) => {
-                        event.preventDefault();
-                        field.handleChange(result.value);
-                        requestAnimationFrame(() => {
-                          textarea.selectionStart = result.selectionStart;
-                          textarea.selectionEnd = result.selectionEnd;
-                        });
-                      };
-
-                      if (
-                        event.key === "Enter" &&
-                        !event.ctrlKey &&
-                        !event.metaKey &&
-                        !event.altKey &&
-                        !event.shiftKey
-                      ) {
-                        const continued =
-                          continueChecklistOnEnter(
-                            field.state.value,
-                            textarea.selectionStart,
-                            textarea.selectionEnd,
-                          ) ??
-                          continueBulletOnEnter(
-                            field.state.value,
-                            textarea.selectionStart,
-                            textarea.selectionEnd,
-                          );
-                        if (continued) {
-                          applyEdit(continued);
+            <form.Field name="description">
+              {(field) => (
+                <Field data-invalid={field.state.meta.errors.length > 0}>
+                  <FieldLabel htmlFor={field.name}>
+                    Description{" "}
+                    <span className="font-normal text-muted-foreground">
+                      (optional)
+                    </span>
+                  </FieldLabel>
+                  <FieldContent>
+                    <Textarea
+                      id={field.name}
+                      value={field.state.value}
+                      onBlur={(event) => {
+                        field.handleBlur();
+                        const formatted = autoformatBareUrls(event.target.value);
+                        if (formatted !== event.target.value) {
+                          field.handleChange(formatted);
                         }
-                        return;
-                      }
+                      }}
+                      onChange={(event) => field.handleChange(event.target.value)}
+                      onKeyDown={(event) => {
+                        const textarea = event.currentTarget;
+                        const applyEdit = (result: TextEditResult) => {
+                          event.preventDefault();
+                          field.handleChange(result.value);
+                          requestAnimationFrame(() => {
+                            textarea.selectionStart = result.selectionStart;
+                            textarea.selectionEnd = result.selectionEnd;
+                          });
+                        };
 
-                      const shortcut = getDescriptionShortcut(event);
-                      if (!shortcut) return;
+                        if (
+                          event.key === "Enter" &&
+                          !event.ctrlKey &&
+                          !event.metaKey &&
+                          !event.altKey &&
+                          !event.shiftKey
+                        ) {
+                          const continued =
+                            continueChecklistOnEnter(
+                              field.state.value,
+                              textarea.selectionStart,
+                              textarea.selectionEnd,
+                            ) ??
+                            continueBulletOnEnter(
+                              field.state.value,
+                              textarea.selectionStart,
+                              textarea.selectionEnd,
+                            );
+                          if (continued) {
+                            applyEdit(continued);
+                          }
+                          return;
+                        }
 
-                      applyEdit(
-                        applyDescriptionShortcut(
-                          field.state.value,
-                          textarea.selectionStart,
-                          textarea.selectionEnd,
-                          shortcut,
-                        ),
-                      );
-                    }}
-                    placeholder="Add details or paste a markdown checklist (- [ ] item)"
-                    rows={8}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Mod+Shift+C checklist · Mod+Shift+B bullet · Mod+[/] indent
-                  </p>
-                  <FieldError errors={field.state.meta.errors} />
-                </FieldContent>
-              </Field>
-            )}
-          </form.Field>
+                        const shortcut = getDescriptionShortcut(event);
+                        if (!shortcut) return;
 
-          {submitError ? (
-            <p className="text-sm text-destructive">{submitError}</p>
-          ) : null}
-        </FieldGroup>
+                        applyEdit(
+                          applyDescriptionShortcut(
+                            field.state.value,
+                            textarea.selectionStart,
+                            textarea.selectionEnd,
+                            shortcut,
+                          ),
+                        );
+                      }}
+                      placeholder="Add details or paste a markdown checklist (- [ ] item)"
+                      rows={8}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Mod+Shift+C checklist · Mod+Shift+B bullet · Mod+[/] indent
+                    </p>
+                    <FieldError errors={field.state.meta.errors} />
+                  </FieldContent>
+                </Field>
+              )}
+            </form.Field>
+
+            {submitError ? (
+              <p className="text-sm text-destructive">{submitError}</p>
+            ) : null}
+          </FieldGroup>
+        </CredenzaBody>
 
         <CredenzaFooter className="mt-6">
           <Button type="button" variant="outline" onClick={onClose}>

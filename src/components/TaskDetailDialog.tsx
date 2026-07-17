@@ -5,6 +5,7 @@ import { RichText } from "@/components/RichText";
 import { Button } from "@/components/ui/button";
 import {
   Credenza,
+  CredenzaBody,
   CredenzaContent,
   CredenzaDescription,
   CredenzaFooter,
@@ -73,89 +74,91 @@ export function TaskDetailDialog({
           </CredenzaDescription>
         </CredenzaHeader>
 
-        <div
-          className={
-            hasDescription
-              ? "max-h-[min(70vh,32rem)] space-y-4 overflow-y-auto pr-1"
-              : "space-y-4"
-          }
-        >
-          {hasDescription ? (
-            <div className="space-y-4">
-              {segments.map((segment, index) => {
-                if (segment.type === "prose") {
-                  const isFirstProse =
-                    segments.findIndex((item) => item.type === "prose") === index;
+        <CredenzaBody>
+          <div
+            className={
+              hasDescription
+                ? "max-h-[min(70vh,32rem)] space-y-4 overflow-y-auto pr-1"
+                : "space-y-4"
+            }
+          >
+            {hasDescription ? (
+              <div className="space-y-4">
+                {segments.map((segment, index) => {
+                  if (segment.type === "prose") {
+                    const isFirstProse =
+                      segments.findIndex((item) => item.type === "prose") === index;
+
+                    return (
+                      <div key={`prose-${index}`}>
+                        {isFirstProse ? (
+                          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                            Description
+                          </p>
+                        ) : null}
+                        <div
+                          className={cn(
+                            "text-sm text-foreground",
+                            isFirstProse ? "mt-1" : undefined,
+                          )}
+                        >
+                          <RichText text={segment.text} />
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  const sectionLabel = showChecklistProgress ? "Checklist" : "List";
 
                   return (
-                    <div key={`prose-${index}`}>
-                      {isFirstProse ? (
-                        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                          Description
-                        </p>
-                      ) : null}
-                      <div
-                        className={cn(
-                          "text-sm text-foreground",
-                          isFirstProse ? "mt-1" : undefined,
-                        )}
-                      >
-                        <RichText text={segment.text} />
+                    <div key={`bullets-${index}`}>
+                      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                        {sectionLabel}
+                      </p>
+                      <div className="mt-2">
+                        <ChecklistTree
+                          items={segment.items}
+                          isAdmin={isAdmin}
+                          onToggle={handleToggle}
+                          showProgressHeader={
+                            showChecklistProgress && index === segments.findIndex(
+                              (item) => item.type === "bullets",
+                            )
+                          }
+                          progress={checklistProgress}
+                        />
                       </div>
                     </div>
                   );
-                }
+                })}
+              </div>
+            ) : (
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Description
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">No description.</p>
+              </div>
+            )}
 
-                const sectionLabel = showChecklistProgress ? "Checklist" : "List";
-
-                return (
-                  <div key={`bullets-${index}`}>
-                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                      {sectionLabel}
-                    </p>
-                    <div className="mt-2">
-                      <ChecklistTree
-                        items={segment.items}
-                        isAdmin={isAdmin}
-                        onToggle={handleToggle}
-                        showProgressHeader={
-                          showChecklistProgress && index === segments.findIndex(
-                            (item) => item.type === "bullets",
-                          )
-                        }
-                        progress={checklistProgress}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
             <div>
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Description
+                Timing
               </p>
-              <p className="mt-1 text-sm text-muted-foreground">No description.</p>
+              <dl className="mt-2 space-y-2">
+                {timingRows.map((row) => (
+                  <div
+                    key={row.label}
+                    className="flex items-baseline justify-between gap-4 text-sm"
+                  >
+                    <dt className="text-muted-foreground">{row.label}</dt>
+                    <dd className="text-right font-medium">{row.value}</dd>
+                  </div>
+                ))}
+              </dl>
             </div>
-          )}
-
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Timing
-            </p>
-            <dl className="mt-2 space-y-2">
-              {timingRows.map((row) => (
-                <div
-                  key={row.label}
-                  className="flex items-baseline justify-between gap-4 text-sm"
-                >
-                  <dt className="text-muted-foreground">{row.label}</dt>
-                  <dd className="text-right font-medium">{row.value}</dd>
-                </div>
-              ))}
-            </dl>
           </div>
-        </div>
+        </CredenzaBody>
 
         {isAdmin && onEdit ? (
           <CredenzaFooter>

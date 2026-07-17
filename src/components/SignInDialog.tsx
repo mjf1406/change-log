@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import {
   Credenza,
+  CredenzaBody,
   CredenzaContent,
   CredenzaDescription,
   CredenzaHeader,
@@ -79,55 +80,57 @@ export function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
           </CredenzaDescription>
         </CredenzaHeader>
 
-        {missingConfig ? (
-          <p className="text-destructive text-sm">
-            Missing VITE_GOOGLE_CLIENT_ID or VITE_GOOGLE_CLIENT_NAME in .env
-          </p>
-        ) : (
-          <div className="space-y-4">
-            {showUnauthorized ? <UnauthorizedCard /> : null}
+        <CredenzaBody>
+          {missingConfig ? (
+            <p className="text-destructive text-sm">
+              Missing VITE_GOOGLE_CLIENT_ID or VITE_GOOGLE_CLIENT_NAME in .env
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {showUnauthorized ? <UnauthorizedCard /> : null}
 
-            <div className="flex justify-center">
-              <GoogleOAuthProvider clientId={googleClientId}>
-                <GoogleLogin
-                  nonce={nonce}
-                  onError={() => setShowUnauthorized(true)}
-                  onSuccess={({ credential }) => {
-                    if (!credential) {
-                      setShowUnauthorized(true);
-                      return;
-                    }
-
-                    setShowUnauthorized(false);
-                    setIsSigningIn(true);
-
-                    db.auth
-                      .signInWithIdToken({
-                        clientName: googleClientName,
-                        idToken: credential,
-                        nonce,
-                      })
-                      .then(() => {
-                        onOpenChange(false);
-                      })
-                      .catch(() => {
+              <div className="flex justify-center">
+                <GoogleOAuthProvider clientId={googleClientId}>
+                  <GoogleLogin
+                    nonce={nonce}
+                    onError={() => setShowUnauthorized(true)}
+                    onSuccess={({ credential }) => {
+                      if (!credential) {
                         setShowUnauthorized(true);
-                      })
-                      .finally(() => {
-                        setIsSigningIn(false);
-                      });
-                  }}
-                />
-              </GoogleOAuthProvider>
-            </div>
+                        return;
+                      }
 
-            {isSigningIn ? (
-              <p className="text-center text-xs text-muted-foreground">
-                Signing in...
-              </p>
-            ) : null}
-          </div>
-        )}
+                      setShowUnauthorized(false);
+                      setIsSigningIn(true);
+
+                      db.auth
+                        .signInWithIdToken({
+                          clientName: googleClientName,
+                          idToken: credential,
+                          nonce,
+                        })
+                        .then(() => {
+                          onOpenChange(false);
+                        })
+                        .catch(() => {
+                          setShowUnauthorized(true);
+                        })
+                        .finally(() => {
+                          setIsSigningIn(false);
+                        });
+                    }}
+                  />
+                </GoogleOAuthProvider>
+              </div>
+
+              {isSigningIn ? (
+                <p className="text-center text-xs text-muted-foreground">
+                  Signing in...
+                </p>
+              ) : null}
+            </div>
+          )}
+        </CredenzaBody>
       </CredenzaContent>
     </Credenza>
   );
