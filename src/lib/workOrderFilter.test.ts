@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { DEFAULT_WORK_ORDER_STATUSES } from "@/lib/tasks";
 import {
   countSitesWithTasks,
@@ -55,14 +55,14 @@ const sites: WorkOrderSiteSnapshot[] = [
 
 describe("filterAndSortWorkOrderItems", () => {
   it("filters to the default todo and doing statuses", () => {
-    const items = filterAndSortWorkOrderItems(
-      sites,
-      DEFAULT_WORK_ORDER_STATUSES,
-      "desc",
-    );
+    const items = filterAndSortWorkOrderItems(sites, DEFAULT_WORK_ORDER_STATUSES, "desc");
 
     expect(items.map((item) => item.task.id)).toEqual(["task-2", "task-1"]);
-    expect(items.every((item) => DEFAULT_WORK_ORDER_STATUSES.includes(item.task.status as "todo" | "doing"))).toBe(true);
+    expect(
+      items.every((item) =>
+        DEFAULT_WORK_ORDER_STATUSES.includes(item.task.status as "todo" | "doing"),
+      ),
+    ).toBe(true);
   });
 
   it("returns an empty list when no statuses are selected", () => {
@@ -70,33 +70,15 @@ describe("filterAndSortWorkOrderItems", () => {
   });
 
   it("sorts newest first by default", () => {
-    const items = filterAndSortWorkOrderItems(
-      sites,
-      ["todo", "doing", "done", "dreams"],
-      "desc",
-    );
+    const items = filterAndSortWorkOrderItems(sites, ["todo", "doing", "done", "dreams"], "desc");
 
-    expect(items.map((item) => item.task.id)).toEqual([
-      "task-3",
-      "task-2",
-      "task-4",
-      "task-1",
-    ]);
+    expect(items.map((item) => item.task.id)).toEqual(["task-3", "task-2", "task-4", "task-1"]);
   });
 
   it("sorts oldest first when requested", () => {
-    const items = filterAndSortWorkOrderItems(
-      sites,
-      ["todo", "doing", "done", "dreams"],
-      "asc",
-    );
+    const items = filterAndSortWorkOrderItems(sites, ["todo", "doing", "done", "dreams"], "asc");
 
-    expect(items.map((item) => item.task.id)).toEqual([
-      "task-1",
-      "task-4",
-      "task-2",
-      "task-3",
-    ]);
+    expect(items.map((item) => item.task.id)).toEqual(["task-1", "task-4", "task-2", "task-3"]);
   });
 
   it("flattens tasks from multiple sites", () => {
@@ -110,11 +92,7 @@ describe("filterAndSortWorkOrderItems", () => {
 
 describe("countSitesWithTasks", () => {
   it("counts unique sites in filtered items", () => {
-    const items = filterAndSortWorkOrderItems(
-      sites,
-      ["todo", "doing", "dreams"],
-      "desc",
-    );
+    const items = filterAndSortWorkOrderItems(sites, ["todo", "doing", "dreams"], "desc");
 
     expect(countSitesWithTasks(items)).toBe(2);
   });

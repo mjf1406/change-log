@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import {
   getChecklistProgress,
   hasBulletList,
@@ -92,9 +92,7 @@ Closing notes`;
   });
 
   it("returns a single prose segment for plain text", () => {
-    expect(parseDescriptionSegments("plain text")).toEqual([
-      { type: "prose", text: "plain text" },
-    ]);
+    expect(parseDescriptionSegments("plain text")).toEqual([{ type: "prose", text: "plain text" }]);
   });
 
   it("returns a single bullets segment for bullet-only content", () => {

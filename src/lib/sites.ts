@@ -4,18 +4,16 @@ import type { AppSchema } from "@/instant.schema";
 import { db } from "@/lib/db";
 import { getSevenDayWindow } from "@/lib/tasks";
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+// oxlint-disable-next-line @typescript-eslint/no-empty-object-type
 export type SiteWithLogo = InstaQLEntity<AppSchema, "sites", { logo: {} }>;
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+// oxlint-disable-next-line @typescript-eslint/no-empty-object-type
 export type Task = InstaQLEntity<AppSchema, "tasks", { site: {} }>;
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+// oxlint-disable-next-line @typescript-eslint/no-empty-object-type
+// oxlint-disable-next-line @typescript-eslint/no-empty-object-type
 export type SiteWithTasks = InstaQLEntity<AppSchema, "sites", { tasks: {}; logo: {} }>;
 
 export async function buildSiteOrderTxs(ordered: SiteWithLogo[]) {
-  const txs = ordered.map((site, index) =>
-    db.tx.sites[site.id].update({ order: index }),
-  );
+  const txs = ordered.map((site, index) => db.tx.sites[site.id].update({ order: index }));
   await db.transact(txs);
 }
 
@@ -92,10 +90,7 @@ export function useDoneTasks(siteSlug?: string) {
 }
 
 export function useDoneTasksFeed(siteSlug?: string, pageIndex = 0) {
-  const { startMs, endMs } = useMemo(
-    () => getSevenDayWindow(pageIndex),
-    [pageIndex],
-  );
+  const { startMs, endMs } = useMemo(() => getSevenDayWindow(pageIndex), [pageIndex]);
 
   const feedQuery = siteSlug
     ? {

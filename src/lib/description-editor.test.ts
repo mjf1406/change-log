@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import {
   applyDescriptionShortcut,
   continueBulletOnEnter,
@@ -108,9 +108,7 @@ describe("continueChecklistOnEnter", () => {
 
   it("returns null for non-checklist lines", () => {
     const value = "plain text";
-    expect(continueChecklistOnEnter(value, value.length, value.length)).toBe(
-      null,
-    );
+    expect(continueChecklistOnEnter(value, value.length, value.length)).toBe(null);
   });
 
   it("continues a checked item as unchecked", () => {

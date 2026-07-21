@@ -1,9 +1,5 @@
-import { describe, expect, it } from "vitest";
-import {
-  autoformatBareUrls,
-  isSafeUrl,
-  parseRichTextParts,
-} from "@/lib/rich-text";
+import { describe, expect, it } from "vite-plus/test";
+import { autoformatBareUrls, isSafeUrl, parseRichTextParts } from "@/lib/rich-text";
 
 describe("isSafeUrl", () => {
   it("allows http and https URLs", () => {
@@ -43,9 +39,7 @@ describe("parseRichTextParts", () => {
 
   it("prefers markdown links over bare URL parsing", () => {
     const parts = parseRichTextParts("[site](https://example.com)");
-    expect(parts).toEqual([
-      { type: "link", label: "site", href: "https://example.com" },
-    ]);
+    expect(parts).toEqual([{ type: "link", label: "site", href: "https://example.com" }]);
   });
 });
 

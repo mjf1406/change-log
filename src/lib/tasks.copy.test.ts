@@ -1,17 +1,13 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { formatTaskForCopy, formatTasksForColumnCopy } from "@/lib/tasks";
 
 describe("formatTaskForCopy", () => {
   it("returns title only when there is no description", () => {
-    expect(formatTaskForCopy({ text: "Task", description: undefined })).toBe(
-      "- Task",
-    );
+    expect(formatTaskForCopy({ text: "Task", description: undefined })).toBe("- Task");
   });
 
   it("prefixes a single-line plain description", () => {
-    expect(formatTaskForCopy({ text: "Task", description: "notes" })).toBe(
-      "- Task\n-- notes",
-    );
+    expect(formatTaskForCopy({ text: "Task", description: "notes" })).toBe("- Task\n-- notes");
   });
 
   it("prefixes every checklist line under the title", () => {
@@ -32,9 +28,7 @@ describe("formatTaskForCopy", () => {
       description: "- [ ] top level\n\t- [ ] nested item",
     });
 
-    expect(result).toBe(
-      "- Task title\n-- - [ ] top level\n-- \t- [ ] nested item",
-    );
+    expect(result).toBe("- Task title\n-- - [ ] top level\n-- \t- [ ] nested item");
   });
 
   it("preserves blank lines in the description", () => {

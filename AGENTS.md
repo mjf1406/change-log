@@ -272,7 +272,7 @@ Rooms host two ephemeral primitives: presence (cursor positions, who's online) a
 Each peer publishes a presence object readable by all other peers in the room. Retained for the connection and cleaned up automatically on disconnect.
 
 ```tsx
-const room = db.room('chat', 'main');
+const room = db.room("chat", "main");
 const { user, peers, publishPresence } = db.rooms.usePresence(room, {
   initialPresence: { x: 0, y: 0 },
 });
@@ -285,12 +285,12 @@ publishPresence({ x: 50, y: 50 });
 Topic payloads aren't retained. Peers only see events fired while they're listening.
 
 ```tsx
-const room = db.room('chat', 'main');
+const room = db.room("chat", "main");
 
-const publishEmoji = db.rooms.usePublishTopic(room, 'emoji');
-publishEmoji({ name: 'fire' });
+const publishEmoji = db.rooms.usePublishTopic(room, "emoji");
+publishEmoji({ name: "fire" });
 
-db.rooms.useTopicEffect(room, 'emoji', (payload) => {
+db.rooms.useTopicEffect(room, "emoji", (payload) => {
   animateEmoji(payload.name);
 });
 ```
@@ -302,14 +302,14 @@ db.rooms.useTopicEffect(room, 'emoji', (payload) => {
 Always pass `schema` when initializing Instant to get type safety for queries and transactions
 
 ```tsx
-import schema from '@/instant.schema';
+import schema from "@/instant.schema";
 
 // On client
-import { init } from '@instantdb/react'; // or your relevant Instant SDK
+import { init } from "@instantdb/react"; // or your relevant Instant SDK
 const clientDb = init({ appId, schema });
 
 // On backend
-import { init } from '@instantdb/admin';
+import { init } from "@instantdb/admin";
 const adminDb = init({ appId, adminToken, schema });
 ```
 
@@ -318,9 +318,9 @@ const adminDb = init({ appId, adminToken, schema });
 Always use `id()` to generate ids for new entities
 
 ```tsx
-import { id } from '@instantdb/react'; // or your relevant Instant SDK
-import { clientDb } from '@/lib/clientDb';
-clientDb.transact(clientDb.tx.todos[id()].create({ title: 'New Todo' }));
+import { id } from "@instantdb/react"; // or your relevant Instant SDK
+import { clientDb } from "@/lib/clientDb";
+clientDb.transact(clientDb.tx.todos[id()].create({ title: "New Todo" }));
 ```
 
 ## Use Instant utility types for data models
@@ -328,20 +328,16 @@ clientDb.transact(clientDb.tx.todos[id()].create({ title: 'New Todo' }));
 Always use Instant utility types to type data models
 
 ```tsx
-import { AppSchema } from '@/instant.schema';
+import { AppSchema } from "@/instant.schema";
 
-type Todo = InstaQLEntity<AppSchema, 'todos'>; // todo from clientDb.useQuery({ todos: {} })
-type PostsWithProfile = InstaQLEntity<
-  AppSchema,
-  'posts',
-  { author: { avatar: {} } }
->; // post from clientDb.useQuery({ posts: { author: { avatar: {} } } })
+type Todo = InstaQLEntity<AppSchema, "todos">; // todo from clientDb.useQuery({ todos: {} })
+type PostsWithProfile = InstaQLEntity<AppSchema, "posts", { author: { avatar: {} } }>; // post from clientDb.useQuery({ posts: { author: { avatar: {} } } })
 ```
 
 ## Use `db.useAuth` or `db.subscribeAuth` for auth state
 
 ```tsx
-import { clientDb } from '@/lib/clientDb';
+import { clientDb } from "@/lib/clientDb";
 
 // For react/react-native apps use db.useAuth
 function App() {
@@ -390,9 +386,7 @@ const { user, created } = await db.auth.signInWithMagicCode({
 // Scaffold data for new users
 if (created) {
   db.transact([
-    db.tx.settings[id()]
-      .update({ theme: 'light', notifications: true })
-      .link({ user: user.id }),
+    db.tx.settings[id()].update({ theme: "light", notifications: true }).link({ user: user.id }),
   ]);
 }
 ```
@@ -437,3 +431,20 @@ Fetch the URL for a topic to learn more about it.
 
 Think before you answer. Make sure your code passes typechecks `tsc --noEmit` and works as expected.
 Remember! AESTHETICS ARE VERY IMPORTANT. All apps should LOOK AMAZING and have GREAT FUNCTIONALITY!
+
+<!--VITE PLUS START-->
+
+# Using Vite+, the Unified Toolchain for the Web
+
+This project is using Vite+, a unified toolchain built on top of Vite, Rolldown, Vitest, tsdown, Oxlint, Oxfmt, and Vite Task. Vite+ wraps runtime management, package management, and frontend tooling in a single global CLI called `vp`. Vite+ is distinct from Vite, and it invokes Vite through `vp dev` and `vp build`. Run `vp help` to print a list of commands and `vp <command> --help` for information about a specific command.
+
+Docs are local at `node_modules/vite-plus/docs` or online at https://viteplus.dev/guide/.
+
+## Review Checklist
+
+- [ ] Run `vp install` after pulling remote changes and before getting started.
+- [ ] Run `vp check` and `vp test` to format, lint, type check and test changes.
+- [ ] Check if there are `vite.config.ts` tasks or `package.json` scripts necessary for validation, run via `vp run <script>`.
+- [ ] If setup, runtime, or package-manager behavior looks wrong, run `vp env doctor` and include its output when asking for help.
+
+<!--VITE PLUS END-->

@@ -8,164 +8,149 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root'
-import { Route as WorkOrderRouteImport } from './routes/work-order'
-import { Route as SitesRouteImport } from './routes/sites'
-import { Route as SiteRouteRouteImport } from './routes/$site/route'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as SiteIndexRouteImport } from './routes/$site/index'
-import { Route as SiteBoardRouteImport } from './routes/$site/board'
+import { Route as rootRouteImport } from "./routes/__root";
+import { Route as WorkOrderRouteImport } from "./routes/work-order";
+import { Route as SitesRouteImport } from "./routes/sites";
+import { Route as SiteRouteRouteImport } from "./routes/$site/route";
+import { Route as IndexRouteImport } from "./routes/index";
+import { Route as SiteIndexRouteImport } from "./routes/$site/index";
+import { Route as SiteBoardRouteImport } from "./routes/$site/board";
 
 const WorkOrderRoute = WorkOrderRouteImport.update({
-  id: '/work-order',
-  path: '/work-order',
+  id: "/work-order",
+  path: "/work-order",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const SitesRoute = SitesRouteImport.update({
-  id: '/sites',
-  path: '/sites',
+  id: "/sites",
+  path: "/sites",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const SiteRouteRoute = SiteRouteRouteImport.update({
-  id: '/$site',
-  path: '/$site',
+  id: "/$site",
+  path: "/$site",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const SiteIndexRoute = SiteIndexRouteImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => SiteRouteRoute,
-} as any)
+} as any);
 const SiteBoardRoute = SiteBoardRouteImport.update({
-  id: '/board',
-  path: '/board',
+  id: "/board",
+  path: "/board",
   getParentRoute: () => SiteRouteRoute,
-} as any)
+} as any);
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/$site': typeof SiteRouteRouteWithChildren
-  '/sites': typeof SitesRoute
-  '/work-order': typeof WorkOrderRoute
-  '/$site/board': typeof SiteBoardRoute
-  '/$site/': typeof SiteIndexRoute
+  "/": typeof IndexRoute;
+  "/$site": typeof SiteRouteRouteWithChildren;
+  "/sites": typeof SitesRoute;
+  "/work-order": typeof WorkOrderRoute;
+  "/$site/board": typeof SiteBoardRoute;
+  "/$site/": typeof SiteIndexRoute;
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/sites': typeof SitesRoute
-  '/work-order': typeof WorkOrderRoute
-  '/$site/board': typeof SiteBoardRoute
-  '/$site': typeof SiteIndexRoute
+  "/": typeof IndexRoute;
+  "/sites": typeof SitesRoute;
+  "/work-order": typeof WorkOrderRoute;
+  "/$site/board": typeof SiteBoardRoute;
+  "/$site": typeof SiteIndexRoute;
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/$site': typeof SiteRouteRouteWithChildren
-  '/sites': typeof SitesRoute
-  '/work-order': typeof WorkOrderRoute
-  '/$site/board': typeof SiteBoardRoute
-  '/$site/': typeof SiteIndexRoute
+  __root__: typeof rootRouteImport;
+  "/": typeof IndexRoute;
+  "/$site": typeof SiteRouteRouteWithChildren;
+  "/sites": typeof SitesRoute;
+  "/work-order": typeof WorkOrderRoute;
+  "/$site/board": typeof SiteBoardRoute;
+  "/$site/": typeof SiteIndexRoute;
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/$site'
-    | '/sites'
-    | '/work-order'
-    | '/$site/board'
-    | '/$site/'
-  fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/sites' | '/work-order' | '/$site/board' | '/$site'
-  id:
-    | '__root__'
-    | '/'
-    | '/$site'
-    | '/sites'
-    | '/work-order'
-    | '/$site/board'
-    | '/$site/'
-  fileRoutesById: FileRoutesById
+  fileRoutesByFullPath: FileRoutesByFullPath;
+  fullPaths: "/" | "/$site" | "/sites" | "/work-order" | "/$site/board" | "/$site/";
+  fileRoutesByTo: FileRoutesByTo;
+  to: "/" | "/sites" | "/work-order" | "/$site/board" | "/$site";
+  id: "__root__" | "/" | "/$site" | "/sites" | "/work-order" | "/$site/board" | "/$site/";
+  fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  SiteRouteRoute: typeof SiteRouteRouteWithChildren
-  SitesRoute: typeof SitesRoute
-  WorkOrderRoute: typeof WorkOrderRoute
+  IndexRoute: typeof IndexRoute;
+  SiteRouteRoute: typeof SiteRouteRouteWithChildren;
+  SitesRoute: typeof SitesRoute;
+  WorkOrderRoute: typeof WorkOrderRoute;
 }
 
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface FileRoutesByPath {
-    '/work-order': {
-      id: '/work-order'
-      path: '/work-order'
-      fullPath: '/work-order'
-      preLoaderRoute: typeof WorkOrderRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sites': {
-      id: '/sites'
-      path: '/sites'
-      fullPath: '/sites'
-      preLoaderRoute: typeof SitesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/$site': {
-      id: '/$site'
-      path: '/$site'
-      fullPath: '/$site'
-      preLoaderRoute: typeof SiteRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/$site/': {
-      id: '/$site/'
-      path: '/'
-      fullPath: '/$site/'
-      preLoaderRoute: typeof SiteIndexRouteImport
-      parentRoute: typeof SiteRouteRoute
-    }
-    '/$site/board': {
-      id: '/$site/board'
-      path: '/board'
-      fullPath: '/$site/board'
-      preLoaderRoute: typeof SiteBoardRouteImport
-      parentRoute: typeof SiteRouteRoute
-    }
+    "/work-order": {
+      id: "/work-order";
+      path: "/work-order";
+      fullPath: "/work-order";
+      preLoaderRoute: typeof WorkOrderRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/sites": {
+      id: "/sites";
+      path: "/sites";
+      fullPath: "/sites";
+      preLoaderRoute: typeof SitesRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/$site": {
+      id: "/$site";
+      path: "/$site";
+      fullPath: "/$site";
+      preLoaderRoute: typeof SiteRouteRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/": {
+      id: "/";
+      path: "/";
+      fullPath: "/";
+      preLoaderRoute: typeof IndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/$site/": {
+      id: "/$site/";
+      path: "/";
+      fullPath: "/$site/";
+      preLoaderRoute: typeof SiteIndexRouteImport;
+      parentRoute: typeof SiteRouteRoute;
+    };
+    "/$site/board": {
+      id: "/$site/board";
+      path: "/board";
+      fullPath: "/$site/board";
+      preLoaderRoute: typeof SiteBoardRouteImport;
+      parentRoute: typeof SiteRouteRoute;
+    };
   }
 }
 
 interface SiteRouteRouteChildren {
-  SiteBoardRoute: typeof SiteBoardRoute
-  SiteIndexRoute: typeof SiteIndexRoute
+  SiteBoardRoute: typeof SiteBoardRoute;
+  SiteIndexRoute: typeof SiteIndexRoute;
 }
 
 const SiteRouteRouteChildren: SiteRouteRouteChildren = {
   SiteBoardRoute: SiteBoardRoute,
   SiteIndexRoute: SiteIndexRoute,
-}
+};
 
-const SiteRouteRouteWithChildren = SiteRouteRoute._addFileChildren(
-  SiteRouteRouteChildren,
-)
+const SiteRouteRouteWithChildren = SiteRouteRoute._addFileChildren(SiteRouteRouteChildren);
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SiteRouteRoute: SiteRouteRouteWithChildren,
   SitesRoute: SitesRoute,
   WorkOrderRoute: WorkOrderRoute,
-}
+};
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>()
+  ._addFileTypes<FileRouteTypes>();
